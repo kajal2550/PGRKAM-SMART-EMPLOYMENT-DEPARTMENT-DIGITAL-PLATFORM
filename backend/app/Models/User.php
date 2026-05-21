@@ -23,6 +23,9 @@ class User extends Authenticatable
         'district',
         'qualification',
         'skills',
+        'dob',
+        'gender',
+        'address',
         'profile_photo',
         'is_active',
         'last_login_at',
@@ -68,8 +71,7 @@ class User extends Authenticatable
 
     public function savedJobs()
     {
-        return $this->belongsToMany(Job::class, 'saved_jobs', 'user_id', 'job_id')
-                    ->withTimestamps();
+        return $this->belongsToMany(Job::class, 'saved_jobs', 'user_id', 'job_id');
     }
 
     public function enrolledTrainings()

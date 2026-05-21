@@ -4,7 +4,8 @@
  */
 export const GUIDANCE_KEYWORDS = [
   {
-    keywords: ['job', 'jobs', 'employment', 'work', 'vacancy', 'sarkari', 'govt', 'government'],
+    keywords: ['job', 'jobs', 'employment', 'work', 'vacancy', 'sarkari', 'govt', 'government',
+               'naukri', 'nokri', 'kaam', 'rozgar', 'rojgar', 'position', 'opening', 'hiring'],
     module:   'Government Jobs',
     path:     '/jobs',
     icon:     '🏛️',
@@ -12,7 +13,7 @@ export const GUIDANCE_KEYWORDS = [
     description: 'Browse government and public sector job openings.',
   },
   {
-    keywords: ['private', 'company', 'corporate', 'mnc', 'startup', 'industry'],
+    keywords: ['private', 'company', 'corporate', 'mnc', 'startup', 'industry', 'sector'],
     module:   'Private Jobs',
     path:     '/jobs?type=private',
     icon:     '🏢',
@@ -20,7 +21,8 @@ export const GUIDANCE_KEYWORDS = [
     description: 'Explore private sector and corporate job opportunities.',
   },
   {
-    keywords: ['skill', 'training', 'course', 'learn', 'certificate', 'trade', 'vocational'],
+    keywords: ['skill', 'training', 'course', 'learn', 'certificate', 'trade', 'vocational',
+               'sikhna', 'seekhna', 'padhai', 'coaching', 'class', 'workshop', 'program'],
     module:   'Skill Training',
     path:     '/training',
     icon:     '🎓',
@@ -28,7 +30,7 @@ export const GUIDANCE_KEYWORDS = [
     description: 'Enroll in government-sponsored skill development programs.',
   },
   {
-    keywords: ['resume', 'cv', 'biodata', 'profile', 'portfolio'],
+    keywords: ['resume', 'cv', 'biodata', 'profile', 'portfolio', 'bio data'],
     module:   'Resume Builder',
     path:     '/resume',
     icon:     '📄',
@@ -36,14 +38,105 @@ export const GUIDANCE_KEYWORDS = [
     description: 'Create and manage your professional resume.',
   },
   {
-    keywords: ['career', 'counsel', 'counselling', 'guide', 'advice', 'mentor', 'direction'],
+    keywords: ['career', 'counsel', 'counselling', 'guide', 'advice', 'mentor', 'direction',
+               'salah', 'guidance', 'help me choose', 'what to do', 'kya karu', 'future'],
     module:   'Career Counselling',
     path:     '/counselling',
     icon:     '💬',
     color:    'purple',
     description: 'Get personalized career guidance from experts.',
   },
+  {
+    keywords: ['scheme', 'yojana', 'loan', 'subsidy', 'benefit', 'sarkari yojana', 'government scheme',
+               'pmrpy', 'svnidhi', 'psdm', 'apprenticeship'],
+    module:   'Employment Schemes',
+    path:     '/schemes',
+    icon:     '📋',
+    color:    'teal',
+    description: 'Explore Punjab & central government employment schemes.',
+  },
+  {
+    keywords: ['apply', 'application', 'applied', 'my application', 'status', 'track'],
+    module:   'My Applications',
+    path:     '/my-applications',
+    icon:     '📝',
+    color:    'blue',
+    description: 'Track your job applications and their status.',
+  },
+  {
+    keywords: ['notification', 'alert', 'update', 'news'],
+    module:   'Notifications',
+    path:     '/notifications',
+    icon:     '🔔',
+    color:    'yellow',
+    description: 'View your latest alerts and updates.',
+  },
 ]
+
+// Greeting patterns
+const GREETINGS = ['hi', 'hlo', 'hello', 'hey', 'helo', 'hii', 'hiii', 'namaste', 'namaskar',
+                   'sat sri akal', 'waheguru', 'good morning', 'good evening', 'good afternoon',
+                   'sup', 'howdy', 'yo', 'hy', 'hlw', 'hlloo', 'helo']
+
+// Help / intro patterns
+const HELP_PATTERNS = ['help', 'what can you do', 'kya kar sakte', 'features', 'services',
+                       'kya hai', 'batao', 'bato', 'tell me', 'intro', 'about']
+
+/**
+ * Smart chatbot response generator — handles greetings, help requests, and keyword matching.
+ * Returns { reply: string, suggestions: Array }
+ */
+export function smartReply(message) {
+  const lower = message.toLowerCase().trim()
+
+  // 1. Greeting
+  if (GREETINGS.some(g => lower === g || lower.startsWith(g + ' ') || lower.endsWith(' ' + g))) {
+    return {
+      reply: "👋 Hello! Welcome to PGRKAM — Punjab's Smart Employment Portal.\n\nI can help you with:\n• Finding government & private jobs\n• Skill training programs\n• Building your resume\n• Career counselling\n• Employment schemes\n\nWhat are you looking for today?",
+      suggestions: [],
+    }
+  }
+
+  // 2. Help / what can you do
+  if (HELP_PATTERNS.some(p => lower.includes(p))) {
+    return {
+      reply: "Here's what I can help you with:",
+      suggestions: GUIDANCE_KEYWORDS.slice(0, 5),
+    }
+  }
+
+  // 3. Keyword analysis
+  const matches = analyseQuery(message)
+  if (matches.length) {
+    const replies = {
+      job:      "Great! Here are the job-related sections for you:",
+      training: "Here are the training programs available:",
+      resume:   "Let me help you with your resume:",
+      career:   "Here are career guidance options:",
+    }
+    const firstType = matches[0]?.path?.includes('training') ? 'training'
+      : matches[0]?.path?.includes('resume') ? 'resume'
+      : matches[0]?.path?.includes('counsel') ? 'career' : 'job'
+    return {
+      reply: replies[firstType] || 'Based on your query, here are the relevant services:',
+      suggestions: matches,
+    }
+  }
+
+  // 4. Short/unknown input
+  if (lower.length < 4) {
+    return {
+      reply: "Hmm, could you be a bit more specific? 😊 Try typing what you need — for example:\n• \"I need a government job\"\n• \"Show me training courses\"\n• \"Help with resume\"",
+      suggestions: [],
+    }
+  }
+
+  // 5. Default fallback
+  return {
+    reply: "I didn't quite understand that. Here are some things I can help you with:",
+    suggestions: GUIDANCE_KEYWORDS.slice(0, 4),
+  }
+}
 
 /**
  * Analyse the user message and return matching guidance suggestions.

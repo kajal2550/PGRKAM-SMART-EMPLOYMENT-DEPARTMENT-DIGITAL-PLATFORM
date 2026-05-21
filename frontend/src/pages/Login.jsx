@@ -78,11 +78,6 @@ export default function Login() {
               </Link>
             </p>
 
-            {/* Demo credentials hint */}
-            <div className="bg-primary-50 border border-primary-100 rounded-xl p-3 mb-6 text-xs text-primary-700">
-              <strong>Demo:</strong> user@pgrkam.gov.in / password &nbsp;|&nbsp; admin@pgrkam.gov.in / password
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
               {/* Email */}
               <div>

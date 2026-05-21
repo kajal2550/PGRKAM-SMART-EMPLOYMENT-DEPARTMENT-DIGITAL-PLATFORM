@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\CounsellingRequest;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -44,6 +45,16 @@ class CounsellingController extends Controller
             'topic'          => $request->topic,
             'notes'          => $request->notes,
             'status'         => 'confirmed',
+        ]);
+
+        // Notification
+        Notification::create([
+            'user_id' => $request->user()->id,
+            'title'   => 'Counselling Session Booked',
+            'message' => 'Your session with ' . $counsellorName . ' on ' . $request->preferred_date . ' at ' . $request->time_slot . ' is confirmed. Topic: ' . $request->topic,
+            'type'    => 'info',
+            'link'    => '/counselling',
+            'is_read' => false,
         ]);
 
         return response()->json([

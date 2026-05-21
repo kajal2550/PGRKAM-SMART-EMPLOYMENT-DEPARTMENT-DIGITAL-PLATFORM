@@ -31,6 +31,17 @@ Route::get('/jobs/{id}',       [JobController::class,     'show']);
 Route::get('/training',        [TrainingController::class, 'index']);
 Route::get('/training/{id}',   [TrainingController::class, 'show']);
 
+// ── Public Stats (real counts from DB) ───────────────────────────────────────
+Route::get('/stats', function () {
+    return response()->json([
+        'jobs'         => \App\Models\Job::count(),
+        'trainings'    => \App\Models\Training::count(),
+        'users'        => \App\Models\User::where('role', 'user')->count(),
+        'applications' => \Illuminate\Support\Facades\DB::table('job_applications')->count(),
+        'districts'    => 22,
+    ]);
+});
+
 // ── Chat / Smart Guidance (public – no auth required) ────────────────────────
 Route::post('/chat-guide',     [ChatGuideController::class, 'handle']);
 
@@ -50,6 +61,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/resume',                    [UserController::class, 'getResume']);
         Route::post('/resume',                   [UserController::class, 'saveResume']);
         Route::get('/counselling',               [UserController::class, 'counsellingSessions']);
+        Route::get('/applications',              [UserController::class, 'myApplications']);
+        Route::get('/enrollments',               [UserController::class, 'myEnrollments']);
+        Route::put('/password',                  [UserController::class, 'changePassword']);
+        Route::delete('/saved-jobs/{id}',        [UserController::class, 'unsaveJob']);
     });
 
     // Jobs – save/apply (requires auth)

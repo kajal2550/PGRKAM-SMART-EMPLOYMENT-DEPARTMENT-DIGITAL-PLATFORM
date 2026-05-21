@@ -25,7 +25,7 @@ class TrainingController extends Controller
             $query->where('title', 'LIKE', "%{$request->search}%");
         }
 
-        return response()->json($query->orderBy('title')->paginate(15));
+        return response()->json($query->orderBy('title')->get());
     }
 
     /**
@@ -59,11 +59,34 @@ class TrainingController extends Controller
             return response()->json(['message' => 'No seats available'], 409);
         }
 
-        DB::transaction(function () use ($user, $training, $id) {
-            $user->enrolledTrainings()->attach($id, ['status' => 'enrolled']);
+        $validated = $request->validate([
+            'phone'            => 'required|string|max:20',
+            'qualification'    => 'required|string|max:100',
+            'notes'            => 'nullable|string|max:500',
+            'preferred_timing' => 'nullable|string|max:50',
+        ]);
+
+        DB::transaction(function () use ($user, $training, $id, $validated) {
+            $user->enrolledTrainings()->attach($id, [
+                'status'           => 'enrolled',
+                'phone'            => $validated['phone'],
+                'qualification'    => $validated['qualification'],
+                'notes'            => $validated['notes'] ?? null,
+                'preferred_timing' => $validated['preferred_timing'] ?? null,
+            ]);
             $training->increment('enrolled_count');
         });
 
-        return response()->json(['message' => 'Successfully enrolled in training']);
+        // Create notification
+        \App\Models\Notification::create([
+            'user_id' => $user->id,
+            'title'   => 'Training Enrollment Confirmed',
+            'message' => 'You have been successfully enrolled in "' . $training->title . '". Check My Enrollments for details.',
+            'type'    => 'training',
+            'link'    => '/my-enrollments',
+            'is_read' => false,
+        ]);
+
+        return response()->json(['message' => 'Successfully enrolled! You will receive confirmation details shortly.']);
     }
 }

@@ -1,0 +1,4666 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PGRKAM Smart Employment Guidance System - Punjab Government's official employment portal" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <title>PGRKAM - Smart Employment Guidance System</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-md border border-white/30 shadow-glass rounded-2xl;
+  }
+
+  .glass-card-dark {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-glass rounded-2xl;
+  }
+
+.btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2.5 rounded-xl
+           transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 focus:outline-none
+           focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+.btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-primary-600 font-semibold px-6 py-2.5 rounded-xl
+           border border-primary-200 transition-all duration-200 shadow-sm hover:shadow active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+.input-field {
+    @apply w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white/80 backdrop-blur-sm
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           transition-all duration-200 text-gray-800 placeholder-gray-400;
+  }
+
+.stat-card {
+    @apply glass-card p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1;
+  }
+
+.service-card {
+    @apply glass-card p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 cursor-pointer;
+  }
+
+.nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+           hover:bg-primary-50 hover:text-primary-700 text-gray-600;
+  }
+
+  .nav-item-active {
+    @apply bg-primary-600 text-white shadow-md hover:bg-primary-700 hover:text-white;
+  }
+
+.chat-bubble-user {
+    @apply bg-primary-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-xs shadow-sm;
+  }
+
+  .chat-bubble-bot {
+    @apply bg-white text-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 max-w-xs shadow-sm border border-gray-100;
+  }
+
+.badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-blue   { @apply bg-blue-100 text-blue-800; }
+  .badge-green  { @apply bg-green-100 text-green-800; }
+  .badge-yellow { @apply bg-yellow-100 text-yellow-800; }
+  .badge-red    { @apply bg-red-100 text-red-800; }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-blue-400 bg-clip-text text-transparent;
+  }
+
+  .bg-gradient-primary {
+    @apply bg-gradient-to-br from-primary-900 via-primary-800 to-blue-700;
+  }
+
+  .bg-gradient-card {
+    @apply bg-gradient-to-br from-white to-primary-50;
+  }
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-primary-300 rounded-full;
+  }
+}
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
+import App from './App.jsx'
+import { AuthProvider } from './context/AuthContext.jsx'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <AuthProvider>
+        <App />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#1e3a8a',
+              color: '#fff',
+              borderRadius: '12px',
+              fontSize: '14px',
+            },
+          }}
+        />
+      </AuthProvider>
+    </BrowserRouter>
+  </React.StrictMode>,
+)
+
+import AppRoutes from './routes/AppRoutes'
+
+function App() {
+  return <AppRoutes />
+}
+
+export default App
+
+import axios from 'axios'
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  withCredentials: true,
+})
+
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('pgrkam_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('pgrkam_token')
+      localStorage.removeItem('pgrkam_user')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+
+export const authAPI = {
+  login:    (data)  => api.post('/login', data),
+  register: (data)  => api.post('/register', data),
+  logout:   ()      => api.post('/logout'),
+  getUser:  ()      => api.get('/user/profile'),
+}
+
+export const servicesAPI = {
+  getAll:  ()         => api.get('/services'),
+  getById: (id)       => api.get(`/services/${id}`),
+  create:  (data)     => api.post('/services', data),
+  update:  (id, data) => api.put(`/services/${id}`, data),
+  delete:  (id)       => api.delete(`/services/${id}`),
+}
+
+export const jobsAPI = {
+  getAll:   (params)  => api.get('/jobs', { params }),
+  getById:  (id)      => api.get(`/jobs/${id}`),
+  create:   (data)    => api.post('/jobs', data),
+  update:   (id, data)=> api.put(`/jobs/${id}`, data),
+  delete:   (id)      => api.delete(`/jobs/${id}`),
+  saveJob:  (id)      => api.post(`/jobs/${id}/save`),
+  getSaved: ()        => api.get('/user/saved-jobs'),
+}
+
+export const trainingAPI = {
+  getAll:   (params)  => api.get('/training', { params }),
+  getById:  (id)      => api.get(`/training/${id}`),
+  enroll:   (id)      => api.post(`/training/${id}/enroll`),
+}
+
+export const chatAPI = {
+  sendMessage: (message) => api.post('/chat-guide', { message }),
+}
+
+export const userAPI = {
+  getProfile:    ()       => api.get('/user/profile'),
+  updateProfile: (data)   => api.put('/user/profile', data),
+  getNotifications: ()    => api.get('/user/notifications'),
+  markNotifRead: (id)     => api.put(`/user/notifications/${id}/read`),
+  getResume:     ()       => api.get('/user/resume'),
+  saveResume:    (data)   => api.post('/user/resume', data),
+  getCounselling: ()      => api.get('/user/counselling'),
+  bookCounselling:(data)  => api.post('/counselling', data),
+}
+
+export const adminAPI = {
+  getUsers:    ()         => api.get('/admin/users'),
+  deleteUser:  (id)       => api.delete(`/admin/users/${id}`),
+  getReports:  ()         => api.get('/admin/reports'),
+  getDashboard:()         => api.get('/admin/dashboard'),
+  getSchemes:  ()         => api.get('/admin/schemes'),
+  addScheme:   (data)     => api.post('/admin/schemes', data),
+}
+
+export default api
+
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { authAPI } from '../api/axios'
+import toast from 'react-hot-toast'
+
+const AuthContext = createContext(null)
+
+export function AuthProvider({ children }) {
+  const [user, setUser]       = useState(null)
+  const [token, setToken]     = useState(localStorage.getItem('pgrkam_token'))
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('pgrkam_user')
+    if (storedUser && token) {
+      try {
+        setUser(JSON.parse(storedUser))
+      } catch {
+        localStorage.removeItem('pgrkam_user')
+      }
+    }
+    setLoading(false)
+  }, [token])
+
+  const login = useCallback(async (credentials) => {
+    try {
+      const { data } = await authAPI.login(credentials)
+      const { access_token, user: userData } = data
+      localStorage.setItem('pgrkam_token', access_token)
+      localStorage.setItem('pgrkam_user', JSON.stringify(userData))
+      setToken(access_token)
+      setUser(userData)
+      toast.success(`Welcome back, ${userData.name}!`)
+      return { success: true, user: userData }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Invalid credentials'
+      toast.error(message)
+      return { success: false, message }
+    }
+  }, [])
+
+  const register = useCallback(async (formData) => {
+    try {
+      const { data } = await authAPI.register(formData)
+      const { access_token, user: userData } = data
+      localStorage.setItem('pgrkam_token', access_token)
+      localStorage.setItem('pgrkam_user', JSON.stringify(userData))
+      setToken(access_token)
+      setUser(userData)
+      toast.success('Account created successfully!')
+      return { success: true, user: userData }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Registration failed'
+      const errors  = error.response?.data?.errors  || {}
+      toast.error(message)
+      return { success: false, message, errors }
+    }
+  }, [])
+
+  const logout = useCallback(async () => {
+    try {
+      await authAPI.logout()
+    } catch {
+    } finally {
+      localStorage.removeItem('pgrkam_token')
+      localStorage.removeItem('pgrkam_user')
+      setToken(null)
+      setUser(null)
+      toast.success('Logged out successfully')
+    }
+  }, [])
+
+  const updateUser = useCallback((updatedUser) => {
+    setUser(updatedUser)
+    localStorage.setItem('pgrkam_user', JSON.stringify(updatedUser))
+  }, [])
+
+  const isAuthenticated = Boolean(token && user)
+  const isAdmin         = user?.role === 'admin'
+
+  return (
+    <AuthContext.Provider value={{
+      user,
+      token,
+      loading,
+      isAuthenticated,
+      isAdmin,
+      login,
+      register,
+      logout,
+      updateUser,
+    }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider')
+  return ctx
+}
+
+export default AuthContext
+
+export { useAuth } from '../context/AuthContext'
+
+import { useState, useEffect, useCallback } from 'react'
+
+export function useFetch(fetchFn, deps = []) {
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  const execute = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetchFn()
+      setData(res.data)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Something went wrong')
+    } finally {
+      setLoading(false)
+    }
+  }, deps)
+
+  useEffect(() => { execute() }, [execute])
+
+  return { data, loading, error, refetch: execute }
+}
+
+export const GUIDANCE_KEYWORDS = [
+  {
+    keywords: ['job', 'jobs', 'employment', 'work', 'vacancy', 'sarkari', 'govt', 'government'],
+    module:   'Government Jobs',
+    path:     '/jobs',
+    icon:     '🏛️',
+    color:    'blue',
+    description: 'Browse government and public sector job openings.',
+  },
+  {
+    keywords: ['private', 'company', 'corporate', 'mnc', 'startup', 'industry'],
+    module:   'Private Jobs',
+    path:     '/jobs?type=private',
+    icon:     '🏢',
+    color:    'indigo',
+    description: 'Explore private sector and corporate job opportunities.',
+  },
+  {
+    keywords: ['skill', 'training', 'course', 'learn', 'certificate', 'trade', 'vocational'],
+    module:   'Skill Training',
+    path:     '/training',
+    icon:     '🎓',
+    color:    'green',
+    description: 'Enroll in government-sponsored skill development programs.',
+  },
+  {
+    keywords: ['resume', 'cv', 'biodata', 'profile', 'portfolio'],
+    module:   'Resume Builder',
+    path:     '/resume',
+    icon:     '📄',
+    color:    'orange',
+    description: 'Create and manage your professional resume.',
+  },
+  {
+    keywords: ['career', 'counsel', 'counselling', 'guide', 'advice', 'mentor', 'direction'],
+    module:   'Career Counselling',
+    path:     '/counselling',
+    icon:     '💬',
+    color:    'purple',
+    description: 'Get personalized career guidance from experts.',
+  },
+]
+
+export function analyseQuery(message) {
+  const lower = message.toLowerCase()
+  const matches = []
+
+  for (const item of GUIDANCE_KEYWORDS) {
+    if (item.keywords.some((kw) => lower.includes(kw))) {
+      if (!matches.find((m) => m.path === item.path)) {
+        matches.push(item)
+      }
+    }
+  }
+
+  return matches
+}
+
+export function formatDate(dateStr) {
+  if (!dateStr) return '—'
+  return new Intl.DateTimeFormat('en-IN', {
+    day:   '2-digit',
+    month: 'short',
+    year:  'numeric',
+  }).format(new Date(dateStr))
+}
+
+export function truncate(str, max = 100) {
+  if (!str) return ''
+  return str.length > max ? str.slice(0, max) + '…' : str
+}
+
+export function colorClasses(color) {
+  const map = {
+    blue:   { bg: 'bg-blue-100',   text: 'text-blue-700',   border: 'border-blue-200'   },
+    indigo: { bg: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-200' },
+    green:  { bg: 'bg-green-100',  text: 'text-green-700',  border: 'border-green-200'  },
+    orange: { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200' },
+    purple: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
+    red:    { bg: 'bg-red-100',    text: 'text-red-700',    border: 'border-red-200'    },
+  }
+  return map[color] || map.blue
+}
+
+export const dummyJobs = [
+  { id: 1, title: 'Junior Clerk',           department: 'Revenue Dept.',         location: 'Chandigarh', type: 'government', salary: '₹25,000 – ₹35,000', deadline: '2026-06-30', posted: '2026-05-01' },
+  { id: 2, title: 'Software Developer',     department: 'Punjab IT Department',   location: 'Mohali',     type: 'government', salary: '₹45,000 – ₹65,000', deadline: '2026-07-15', posted: '2026-05-05' },
+  { id: 3, title: 'Data Entry Operator',    department: 'Health Dept.',           location: 'Ludhiana',   type: 'government', salary: '₹18,000 – ₹22,000', deadline: '2026-06-20', posted: '2026-05-08' },
+  { id: 4, title: 'Frontend Engineer',      department: 'TechCorp Pvt. Ltd.',     location: 'Mohali',     type: 'private',    salary: '₹40,000 – ₹70,000', deadline: '2026-06-25', posted: '2026-05-10' },
+  { id: 5, title: 'Customer Support Exec.', department: 'BPO Solutions Ltd.',     location: 'Amritsar',   type: 'private',    salary: '₹15,000 – ₹25,000', deadline: '2026-06-18', posted: '2026-05-12' },
+  { id: 6, title: 'Electrician',            department: 'PSPCL',                  location: 'Patiala',    type: 'government', salary: '₹20,000 – ₹30,000', deadline: '2026-07-01', posted: '2026-05-03' },
+]
+
+export const dummyTrainings = [
+  { id: 1, title: 'Web Development Bootcamp',   provider: 'Punjab Skill Mission', duration: '3 months', seats: 30, enrolled: 18, category: 'IT',           fee: 'Free' },
+  { id: 2, title: 'Electrician Trade Course',   provider: 'ITI Ludhiana',         duration: '6 months', seats: 25, enrolled: 25, category: 'Electrical',   fee: 'Free' },
+  { id: 3, title: 'Digital Marketing',          provider: 'CDAC Mohali',          duration: '2 months', seats: 40, enrolled: 22, category: 'Marketing',    fee: '₹500' },
+  { id: 4, title: 'Tailoring & Garment Making', provider: 'Women Empowerment ITI', duration: '4 months', seats: 20, enrolled: 15, category: 'Handcraft',  fee: 'Free' },
+  { id: 5, title: 'Spoken English & Soft Skills',provider: 'PGRKAM Centre',       duration: '1 month',  seats: 50, enrolled: 30, category: 'Communication', fee: 'Free' },
+]
+
+export const dummyServices = [
+  { id: 1, title: 'Government Jobs',      icon: '🏛️', color: 'blue',   path: '/jobs',        description: 'Latest government job notifications across Punjab departments.' },
+  { id: 2, title: 'Private Jobs',         icon: '🏢', color: 'indigo', path: '/jobs?type=private', description: 'Private sector opportunities from top recruiters.' },
+  { id: 3, title: 'Skill Training',       icon: '🎓', color: 'green',  path: '/training',    description: 'Free and subsidised skill development programs.' },
+  { id: 4, title: 'Resume Builder',       icon: '📄', color: 'orange', path: '/resume',      description: 'Build a professional resume in minutes.' },
+  { id: 5, title: 'Career Counselling',   icon: '💬', color: 'purple', path: '/counselling', description: 'One-on-one guidance sessions with career experts.' },
+  { id: 6, title: 'Employment Schemes',   icon: '📋', color: 'red',    path: '/services',    description: 'State and central government employment welfare schemes.' },
+]
+
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import {
+  FiBell, FiMenu, FiX, FiUser, FiLogOut,
+  FiChevronDown, FiSearch,
+} from 'react-icons/fi'
+import { MdWork } from 'react-icons/md'
+
+export default function Navbar({ onMenuClick, sidebarOpen }) {
+  const { user, logout, isAuthenticated, isAdmin } = useAuth()
+  const navigate = useNavigate()
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [mobileOpen,   setMobileOpen]   = useState(false)
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login')
+  }
+
+  return (
+    <nav className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+
+          {}
+          <div className="flex items-center gap-3">
+            {isAuthenticated && (
+              <button
+                onClick={onMenuClick}
+                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition"
+                aria-label="Toggle sidebar"
+              >
+                {sidebarOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+              </button>
+            )}
+
+            <Link to="/" className="flex items-center gap-2">
+              <div className="w-9 h-9 bg-gradient-to-br from-primary-700 to-blue-500 rounded-xl flex items-center justify-center shadow">
+                <MdWork className="text-white" size={20} />
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-sm font-bold text-primary-800 leading-tight">PGRKAM</p>
+                <p className="text-xs text-gray-500 leading-tight">Employment Portal</p>
+              </div>
+            </Link>
+          </div>
+
+          {}
+          <div className="hidden md:flex items-center gap-1">
+            {[
+              { label: 'Home',     to: '/'          },
+              { label: 'Services', to: '/services'  },
+              { label: 'Jobs',     to: '/jobs'      },
+              { label: 'Training', to: '/training'  },
+              { label: 'About',    to: '/about'     },
+              { label: 'Contact',  to: '/contact'   },
+            ].map(({ label, to }) => (
+              <Link
+                key={to}
+                to={to}
+                className="px-3 py-2 rounded-lg text-sm font-medium text-gray-600
+                           hover:text-primary-700 hover:bg-primary-50 transition"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          {}
+          <div className="flex items-center gap-2">
+            {isAuthenticated ? (
+              <>
+                {}
+                <Link
+                  to="/dashboard"
+                  className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition"
+                >
+                  <FiBell size={20} />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                </Link>
+
+                {}
+                <div className="relative">
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl
+                               hover:bg-gray-100 transition"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold text-sm">
+                      {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <span className="hidden sm:block text-sm font-medium text-gray-700">
+                      {user?.name?.split(' ')[0]}
+                    </span>
+                    <FiChevronDown size={14} className="text-gray-500" />
+                  </button>
+
+                  {dropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-100
+                                    rounded-2xl shadow-lg py-2 z-50 animate-fade-in">
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <p className="text-sm font-semibold text-gray-800">{user?.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                      </div>
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-600 hover:bg-primary-50 hover:text-primary-700"
+                      >
+                        <FiUser size={15} /> My Dashboard
+                      </Link>
+                      {isAdmin && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-600 hover:bg-primary-50 hover:text-primary-700"
+                        >
+                          <FiSearch size={15} /> Admin Panel
+                        </Link>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50"
+                      >
+                        <FiLogOut size={15} /> Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link to="/login"    className="btn-secondary text-sm py-2 px-4">Login</Link>
+                <Link to="/register" className="btn-primary  text-sm py-2 px-4">Register</Link>
+              </div>
+            )}
+
+            {}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition"
+            >
+              {mobileOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+            </button>
+          </div>
+        </div>
+
+        {}
+        {mobileOpen && (
+          <div className="md:hidden border-t border-gray-100 py-3 space-y-1 animate-fade-in">
+            {[
+              { label: 'Home',     to: '/'          },
+              { label: 'Services', to: '/services'  },
+              { label: 'Jobs',     to: '/jobs'      },
+              { label: 'Training', to: '/training'  },
+              { label: 'About',    to: '/about'     },
+              { label: 'Contact',  to: '/contact'   },
+            ].map(({ label, to }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setMobileOpen(false)}
+                className="block px-4 py-2 text-sm font-medium text-gray-600
+                           hover:text-primary-700 hover:bg-primary-50 rounded-lg"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </nav>
+  )
+}
+
+import { NavLink, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import {
+  FiHome, FiBriefcase, FiBookOpen, FiFileText,
+  FiMessageSquare, FiUser, FiBell, FiLogOut,
+  FiSettings, FiPieChart, FiUsers, FiLayers,
+} from 'react-icons/fi'
+import { MdWork } from 'react-icons/md'
+
+const userNav = [
+  { label: 'Dashboard',   to: '/dashboard',   icon: FiHome        },
+  { label: 'Jobs',        to: '/jobs',        icon: FiBriefcase   },
+  { label: 'Training',    to: '/training',    icon: FiBookOpen    },
+  { label: 'Resume',      to: '/resume',      icon: FiFileText    },
+  { label: 'Counselling', to: '/counselling', icon: FiMessageSquare },
+  { label: 'Profile',     to: '/dashboard',   icon: FiUser        },
+  { label: 'Notifications', to: '/dashboard', icon: FiBell        },
+]
+
+const adminNav = [
+  { label: 'Admin Home',  to: '/admin',           icon: FiHome    },
+  { label: 'Users',       to: '/admin/users',      icon: FiUsers   },
+  { label: 'Services',    to: '/admin/services',   icon: FiLayers  },
+  { label: 'Jobs',        to: '/admin/jobs',       icon: FiBriefcase },
+  { label: 'Reports',     to: '/reports',          icon: FiPieChart },
+  { label: 'Settings',    to: '/admin/settings',   icon: FiSettings },
+]
+
+export default function Sidebar({ isOpen }) {
+  const { user, logout, isAdmin } = useAuth()
+  const navigate  = useNavigate()
+  const navItems  = isAdmin ? adminNav : userNav
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login')
+  }
+
+  return (
+    <>
+      {}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden" />
+      )}
+
+      {}
+      <aside
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] z-40 flex flex-col
+                    bg-white border-r border-gray-200 shadow-lg transition-all duration-300
+                    ${isOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full lg:translate-x-0 lg:w-16'}`}
+      >
+        {}
+        <div className={`p-4 border-b border-gray-100 ${!isOpen && 'lg:hidden'}`}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-600 to-blue-400
+                            flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-sm font-semibold text-gray-800 truncate">{user?.name}</p>
+              <span className={`badge ${isAdmin ? 'badge-blue' : 'badge-green'} mt-0.5`}>
+                {isAdmin ? 'Admin' : 'User'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {}
+        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto scrollbar-thin">
+          {navItems.map(({ label, to, icon: Icon }) => (
+            <NavLink
+              key={label}
+              to={to}
+              className={({ isActive }) =>
+                `nav-item ${isActive ? 'nav-item-active' : ''}`
+              }
+            >
+              <Icon size={18} className="flex-shrink-0" />
+              <span className={`truncate ${!isOpen && 'lg:hidden'}`}>{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {}
+        <div className="p-3 border-t border-gray-100">
+          <button
+            onClick={handleLogout}
+            className="nav-item w-full text-red-500 hover:bg-red-50 hover:text-red-600"
+          >
+            <FiLogOut size={18} className="flex-shrink-0" />
+            <span className={`truncate ${!isOpen && 'lg:hidden'}`}>Logout</span>
+          </button>
+        </div>
+      </aside>
+    </>
+  )
+}
+
+import { Link } from 'react-router-dom'
+import { MdWork } from 'react-icons/md'
+import {
+  FiFacebook, FiTwitter, FiInstagram, FiYoutube,
+  FiMail, FiPhone, FiMapPin,
+} from 'react-icons/fi'
+
+export default function Footer() {
+  const year = new Date().getFullYear()
+
+  return (
+    <footer className="bg-navy-900 text-gray-300">
+      {}
+      <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+        {}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-9 h-9 bg-gradient-to-br from-primary-600 to-blue-400 rounded-xl flex items-center justify-center">
+              <MdWork className="text-white" size={20} />
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm">PGRKAM</p>
+              <p className="text-gray-400 text-xs">Employment Portal</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-400 leading-relaxed mb-4">
+            Punjab Government's official smart employment guidance system — connecting
+            citizens with jobs, training, and career services.
+          </p>
+          <div className="flex gap-3">
+            {[FiFacebook, FiTwitter, FiInstagram, FiYoutube].map((Icon, i) => (
+              <a
+                key={i}
+                href="#"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-primary-600 flex items-center justify-center
+                           transition-colors duration-200"
+              >
+                <Icon size={14} />
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {}
+        <div>
+          <h3 className="text-white font-semibold mb-4">Quick Links</h3>
+          <ul className="space-y-2 text-sm">
+            {[
+              { label: 'Government Jobs',    to: '/jobs'        },
+              { label: 'Skill Training',     to: '/training'    },
+              { label: 'Resume Builder',     to: '/resume'      },
+              { label: 'Career Counselling', to: '/counselling' },
+              { label: 'Employment Schemes', to: '/services'    },
+            ].map(({ label, to }) => (
+              <li key={to}>
+                <Link to={to} className="hover:text-primary-400 transition-colors">
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {}
+        <div>
+          <h3 className="text-white font-semibold mb-4">Resources</h3>
+          <ul className="space-y-2 text-sm">
+            {[
+              { label: 'About PGRKAM', to: '/about'   },
+              { label: 'Services',     to: '/services' },
+              { label: 'Contact Us',   to: '/contact'  },
+              { label: 'Login',        to: '/login'    },
+              { label: 'Register',     to: '/register' },
+            ].map(({ label, to }) => (
+              <li key={to}>
+                <Link to={to} className="hover:text-primary-400 transition-colors">
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {}
+        <div>
+          <h3 className="text-white font-semibold mb-4">Contact Us</h3>
+          <ul className="space-y-3 text-sm">
+            <li className="flex items-start gap-3">
+              <FiMapPin size={15} className="text-primary-400 flex-shrink-0 mt-0.5" />
+              <span>Department of Employment,<br />SCO 153-155, Sector 34-A,<br />Chandigarh – 160022</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <FiPhone size={15} className="text-primary-400 flex-shrink-0" />
+              <span>0172-2664000</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <FiMail size={15} className="text-primary-400 flex-shrink-0" />
+              <span>helpdesk@pgrkam.gov.in</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {}
+      <div className="border-t border-white/10 py-4 px-6">
+        <div className="max-w-screen-xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-500">
+          <p>© {year} PGRKAM – Government of Punjab. All rights reserved.</p>
+          <div className="flex gap-4">
+            <a href="#" className="hover:text-gray-300 transition">Privacy Policy</a>
+            <a href="#" className="hover:text-gray-300 transition">Terms of Use</a>
+            <a href="#" className="hover:text-gray-300 transition">Accessibility</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  )
+}
+
+import { useState, useRef, useEffect } from 'react'
+import { analyseQuery } from '../utils/helpers'
+import { FiSend, FiMessageCircle, FiX } from 'react-icons/fi'
+import SuggestionCard from './SuggestionCard'
+import { chatAPI } from '../api/axios'
+
+const WELCOME_MSG = {
+  id:   0,
+  from: 'bot',
+  text: 'Hello! I\'m your Employment Guidance Assistant. Tell me what you\'re looking for — e.g., "I need a government job", "I want skill training", "Help with resume".',
+  suggestions: [],
+}
+
+export default function QueryBox() {
+  const [messages, setMessages] = useState([WELCOME_MSG])
+  const [input,    setInput]    = useState('')
+  const [loading,  setLoading]  = useState(false)
+  const [open,     setOpen]     = useState(false)
+  const bottomRef  = useRef(null)
+  const inputRef   = useRef(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 100)
+  }, [open])
+
+  const sendMessage = async () => {
+    const text = input.trim()
+    if (!text) return
+
+    const userMsg = { id: Date.now(), from: 'user', text }
+    setMessages((prev) => [...prev, userMsg])
+    setInput('')
+    setLoading(true)
+
+    try {
+      const { data } = await chatAPI.sendMessage(text)
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now() + 1, from: 'bot', text: data.reply || 'Here are some suggestions:', suggestions: data.suggestions || [] },
+      ])
+    } catch {
+      const suggestions = analyseQuery(text)
+      const reply = suggestions.length
+        ? 'Based on your query, here are the relevant services:'
+        : "I couldn't find an exact match. Please try keywords like \"job\", \"training\", \"resume\", or \"career counselling\"."
+
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now() + 1, from: 'bot', text: reply, suggestions },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary-600 hover:bg-primary-700
+                   text-white rounded-full shadow-lg flex items-center justify-center
+                   transition-all duration-300 hover:scale-110 animate-bounce-slow"
+        aria-label="Open guidance chat"
+      >
+        <FiMessageCircle size={24} />
+        <span className="absolute top-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+      </button>
+    )
+  }
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50 w-80 sm:w-96 flex flex-col bg-white
+                    rounded-2xl shadow-2xl border border-gray-200 animate-slide-up overflow-hidden"
+         style={{ height: '520px' }}>
+
+      {}
+      <div className="bg-gradient-primary px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-lg">
+            🤖
+          </div>
+          <div>
+            <p className="text-white font-semibold text-sm">Guidance Assistant</p>
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-green-400 rounded-full" />
+              <span className="text-white/70 text-xs">Online</span>
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => setOpen(false)}
+          className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition"
+        >
+          <FiX size={18} />
+        </button>
+      </div>
+
+      {}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin bg-gray-50">
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className="max-w-[85%] space-y-2">
+              {msg.from === 'bot' && (
+                <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-sm mb-1">
+                  🤖
+                </div>
+              )}
+              <div className={msg.from === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'}>
+                <p className="text-sm">{msg.text}</p>
+              </div>
+              {}
+              {msg.suggestions?.length > 0 && (
+                <div className="space-y-2 mt-2">
+                  {msg.suggestions.map((s, i) => (
+                    <SuggestionCard key={i} {...s} compact />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {loading && (
+          <div className="flex justify-start">
+            <div className="chat-bubble-bot">
+              <div className="flex gap-1 items-center py-1">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: `${i * 150}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
+      {}
+      <div className="p-3 border-t border-gray-100 bg-white">
+        <div className="flex gap-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder="Type your query…"
+            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none
+                       focus:ring-2 focus:ring-primary-500 bg-gray-50"
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim() || loading}
+            className="w-9 h-9 bg-primary-600 hover:bg-primary-700 text-white rounded-xl flex items-center
+                       justify-center transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+          >
+            <FiSend size={15} />
+          </button>
+        </div>
+        {}
+        <div className="flex flex-wrap gap-1 mt-2">
+          {['I need jobs', 'Skill training', 'Resume help', 'Career advice'].map((q) => (
+            <button
+              key={q}
+              onClick={() => { setInput(q); inputRef.current?.focus() }}
+              className="text-xs px-2 py-1 rounded-full bg-primary-50 text-primary-600
+                         hover:bg-primary-100 transition border border-primary-100"
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+import { useNavigate } from 'react-router-dom'
+import { colorClasses } from '../utils/helpers'
+import { FiArrowRight } from 'react-icons/fi'
+
+export default function ServiceCard({ title, description, icon, color = 'blue', path, count }) {
+  const navigate = useNavigate()
+  const cls = colorClasses(color)
+
+  return (
+    <div
+      onClick={() => navigate(path)}
+      className="service-card group cursor-pointer animate-slide-up"
+    >
+      {}
+      <div className={`w-14 h-14 rounded-2xl ${cls.bg} flex items-center justify-center text-2xl mb-4
+                       group-hover:scale-110 transition-transform duration-300`}>
+        {icon}
+      </div>
+
+      {}
+      <h3 className={`text-lg font-bold ${cls.text} mb-2`}>{title}</h3>
+      <p className="text-sm text-gray-500 leading-relaxed mb-4">{description}</p>
+
+      {}
+      <div className="flex items-center justify-between">
+        {count !== undefined && (
+          <span className={`badge ${cls.bg} ${cls.text}`}>
+            {count.toLocaleString()} available
+          </span>
+        )}
+        <button className={`flex items-center gap-1 text-sm font-medium ${cls.text} ml-auto
+                            group-hover:gap-2 transition-all duration-200`}>
+          Explore <FiArrowRight size={14} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+import { useNavigate } from 'react-router-dom'
+import { colorClasses } from '../utils/helpers'
+import { FiArrowRight } from 'react-icons/fi'
+
+export default function SuggestionCard({ module, description, icon, color = 'blue', path, compact = false }) {
+  const navigate = useNavigate()
+  const cls = colorClasses(color)
+
+  if (compact) {
+    return (
+      <button
+        onClick={() => navigate(path)}
+        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl border ${cls.border}
+                    ${cls.bg} hover:shadow-sm transition-all duration-200 text-left`}
+      >
+        <span className="text-lg">{icon}</span>
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-semibold ${cls.text}`}>{module}</p>
+          <p className="text-xs text-gray-500 truncate">{description}</p>
+        </div>
+        <FiArrowRight size={14} className={cls.text} />
+      </button>
+    )
+  }
+
+  return (
+    <div
+      onClick={() => navigate(path)}
+      className={`flex items-center gap-4 p-4 rounded-2xl border ${cls.border} ${cls.bg}
+                  hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
+    >
+      <div className={`w-12 h-12 rounded-xl bg-white/60 flex items-center justify-center text-2xl flex-shrink-0`}>
+        {icon}
+      </div>
+      <div className="flex-1">
+        <h4 className={`font-bold ${cls.text}`}>{module}</h4>
+        <p className="text-sm text-gray-600 mt-0.5">{description}</p>
+      </div>
+      <button className={`btn-primary text-sm py-1.5 px-3 ${cls.bg}`}>
+        Go <FiArrowRight size={12} />
+      </button>
+    </div>
+  )
+}
+
+import { colorClasses } from '../utils/helpers'
+
+export default function DashboardCard({ title, value, icon, color = 'blue', change, trend, onClick }) {
+  const cls = colorClasses(color)
+
+  return (
+    <div
+      onClick={onClick}
+      className={`stat-card ${onClick ? 'cursor-pointer' : ''} animate-slide-up`}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-12 h-12 rounded-2xl ${cls.bg} flex items-center justify-center`}>
+          <span className={cls.text}>{icon}</span>
+        </div>
+        {change && (
+          <span
+            className={`badge ${
+              trend === 'up' ? 'badge-green' : 'badge-red'
+            }`}
+          >
+            {trend === 'up' ? '▲' : '▼'} {change}
+          </span>
+        )}
+      </div>
+
+      <p className="text-2xl font-extrabold text-gray-800 mb-1">
+        {typeof value === 'number' ? value.toLocaleString() : value}
+      </p>
+      <p className="text-sm text-gray-500">{title}</p>
+    </div>
+  )
+}
+
+export default function Loader({ fullPage = false, size = 'md', text = 'Loading…' }) {
+  const sizeMap = {
+    sm: 'w-5 h-5 border-2',
+    md: 'w-10 h-10 border-4',
+    lg: 'w-16 h-16 border-4',
+  }
+
+  const spinner = (
+    <div className="flex flex-col items-center justify-center gap-3">
+      <div
+        className={`${sizeMap[size]} rounded-full border-primary-200 border-t-primary-600 animate-spin`}
+      />
+      {text && <p className="text-sm text-gray-500 animate-pulse">{text}</p>}
+    </div>
+  )
+
+  if (fullPage) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+        {spinner}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-center py-12">
+      {spinner}
+    </div>
+  )
+}
+
+import { useState } from 'react'
+import { Outlet } from 'react-router-dom'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+import QueryBox from '../components/QueryBox'
+
+export default function MainLayout() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      {}
+      <main className="flex-1 pt-16">
+        <Outlet />
+      </main>
+      <Footer />
+      {}
+      <QueryBox />
+    </div>
+  )
+}
+
+import { useState } from 'react'
+import { Outlet } from 'react-router-dom'
+import Navbar from '../components/Navbar'
+import Sidebar from '../components/Sidebar'
+
+export default function DashboardLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar
+        onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+        sidebarOpen={sidebarOpen}
+      />
+
+      <div className="flex pt-16">
+        <Sidebar isOpen={sidebarOpen} />
+
+        {}
+        <main
+          className={`flex-1 transition-all duration-300 min-h-[calc(100vh-4rem)]
+                      p-4 sm:p-6 lg:p-8
+                      ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}
+        >
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  )
+}
+
+import { Routes, Route } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import Loader from '../components/Loader'
+import MainLayout from '../layouts/MainLayout'
+import DashboardLayout from '../layouts/DashboardLayout'
+import { ProtectedRoute, AdminRoute, GuestRoute } from './ProtectedRoute'
+
+const Home           = lazy(() => import('../pages/Home'))
+const About          = lazy(() => import('../pages/About'))
+const Services       = lazy(() => import('../pages/Services'))
+const Contact        = lazy(() => import('../pages/Contact'))
+const Login          = lazy(() => import('../pages/Login'))
+const Register       = lazy(() => import('../pages/Register'))
+const Dashboard      = lazy(() => import('../pages/Dashboard'))
+const Jobs           = lazy(() => import('../pages/Jobs'))
+const Training       = lazy(() => import('../pages/Training'))
+const Resume         = lazy(() => import('../pages/Resume'))
+const Counselling    = lazy(() => import('../pages/Counselling'))
+const AdminDashboard = lazy(() => import('../pages/AdminDashboard'))
+const Reports        = lazy(() => import('../pages/Reports'))
+const NotFound       = lazy(() => import('../pages/NotFound'))
+
+const fallback = <Loader fullPage text="Loading page…" />
+
+export default function AppRoutes() {
+  return (
+    <Suspense fallback={fallback}>
+      <Routes>
+
+        {}
+        <Route element={<MainLayout />}>
+          <Route index         element={<Home />}     />
+          <Route path="about"  element={<About />}    />
+          <Route path="services" element={<Services />} />
+          <Route path="contact"  element={<Contact />}  />
+          <Route path="jobs"     element={<Jobs />}     />
+          <Route path="training" element={<Training />} />
+
+          {}
+          <Route element={<GuestRoute />}>
+            <Route path="login"    element={<Login />}    />
+            <Route path="register" element={<Register />} />
+          </Route>
+        </Route>
+
+        {}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="dashboard"  element={<Dashboard />}   />
+            <Route path="resume"     element={<Resume />}      />
+            <Route path="counselling" element={<Counselling />} />
+          </Route>
+        </Route>
+
+        {}
+        <Route element={<AdminRoute />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="admin"   element={<AdminDashboard />} />
+            <Route path="reports" element={<Reports />}        />
+          </Route>
+        </Route>
+
+        {}
+        <Route path="*" element={<NotFound />} />
+
+      </Routes>
+    </Suspense>
+  )
+}
+
+import { Navigate, Outlet } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import Loader from '../components/Loader'
+
+export function ProtectedRoute() {
+  const { isAuthenticated, loading } = useAuth()
+  if (loading) return <Loader fullPage />
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />
+}
+
+export function AdminRoute() {
+  const { isAuthenticated, isAdmin, loading } = useAuth()
+  if (loading) return <Loader fullPage />
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (!isAdmin) return <Navigate to="/dashboard" replace />
+  return <Outlet />
+}
+
+export function GuestRoute() {
+  const { isAuthenticated, loading } = useAuth()
+  if (loading) return <Loader fullPage />
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Outlet />
+}
+
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { FiArrowRight, FiSearch, FiCheckCircle } from 'react-icons/fi'
+import ServiceCard from '../components/ServiceCard'
+import SuggestionCard from '../components/SuggestionCard'
+import { dummyServices, analyseQuery, GUIDANCE_KEYWORDS } from '../utils/helpers'
+
+const stats = [
+  { value: '50,000+', label: 'Jobs Listed'        },
+  { value: '1,200+',  label: 'Training Programs'  },
+  { value: '3 Lakh+', label: 'Registered Users'   },
+  { value: '95%',     label: 'Placement Success'  },
+]
+
+export default function Home() {
+  const navigate = useNavigate()
+  const [query,       setQuery]       = useState('')
+  const [suggestions, setSuggestions] = useState([])
+  const [searched,    setSearched]    = useState(false)
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    const results = analyseQuery(query)
+    setSuggestions(results)
+    setSearched(true)
+    if (results.length === 1) navigate(results[0].path)
+  }
+
+  return (
+    <div>
+      {}
+      <section className="relative bg-gradient-primary overflow-hidden">
+        {}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-primary-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+        <div className="relative max-w-screen-xl mx-auto px-6 py-24 text-center">
+          {}
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20
+                           text-white/90 text-sm font-medium mb-6">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            Punjab Government Employment Portal
+          </span>
+
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6">
+            Find Your Path to <br />
+            <span className="text-blue-300">Employment Success</span>
+          </h1>
+          <p className="text-lg text-white/80 max-w-2xl mx-auto mb-10">
+            PGRKAM connects Punjab's workforce with government jobs, skill training,
+            career counselling, and resume building — all in one smart portal.
+          </p>
+
+          {}
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-8">
+            <div className="flex gap-2 p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setSearched(false) }}
+                placeholder='Try: "I need a government job" or "Want skill training"'
+                className="flex-1 px-4 py-2.5 bg-transparent text-white placeholder-white/60
+                           focus:outline-none text-sm"
+              />
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-5 py-2.5 bg-white text-primary-700
+                           rounded-xl font-semibold text-sm hover:bg-blue-50 transition"
+              >
+                <FiSearch size={16} /> Explore
+              </button>
+            </div>
+          </form>
+
+          {}
+          {searched && suggestions.length > 0 && (
+            <div className="max-w-xl mx-auto space-y-3 mb-8 animate-slide-up">
+              {suggestions.map((s, i) => (
+                <SuggestionCard key={i} {...s} />
+              ))}
+            </div>
+          )}
+          {searched && suggestions.length === 0 && (
+            <p className="text-white/70 text-sm mb-6 animate-fade-in">
+              No direct match found. Try words like "job", "training", "resume", or "career".
+            </p>
+          )}
+
+          {}
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link to="/register" className="btn-primary bg-white text-primary-700 hover:bg-blue-50">
+              Get Started <FiArrowRight size={16} />
+            </Link>
+            <Link to="/services" className="btn-secondary border-white/30 text-white hover:bg-white/10">
+              Browse Services
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {}
+      <section className="bg-primary-800">
+        <div className="max-w-screen-xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          {stats.map(({ value, label }) => (
+            <div key={label}>
+              <p className="text-3xl font-extrabold text-white">{value}</p>
+              <p className="text-sm text-primary-200 mt-1">{label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {}
+      <section className="max-w-screen-xl mx-auto px-6 py-20">
+        <div className="text-center mb-12">
+          <span className="badge badge-blue mb-3">Our Services</span>
+          <h2 className="text-3xl font-extrabold text-gray-900">
+            Everything You Need, <span className="text-gradient">In One Place</span>
+          </h2>
+          <p className="text-gray-500 mt-3 max-w-xl mx-auto">
+            Explore Punjab's comprehensive employment ecosystem built for every citizen.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {dummyServices.map((s) => (
+            <ServiceCard key={s.id} {...s} />
+          ))}
+        </div>
+        <div className="text-center mt-10">
+          <Link to="/services" className="btn-primary">
+            View All Services <FiArrowRight size={16} />
+          </Link>
+        </div>
+      </section>
+
+      {}
+      <section className="bg-gradient-to-br from-primary-50 to-blue-50 py-20">
+        <div className="max-w-screen-xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <span className="badge badge-blue mb-3">AI Guidance</span>
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
+              Smart Guidance at Your Fingertips
+            </h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Not sure where to start? Our AI-powered guidance system listens to what you
+              need and instantly points you to the right service — no browsing required.
+            </p>
+            <ul className="space-y-3">
+              {[
+                'Type in plain language – no forms needed',
+                'Instant module recommendations',
+                'Available 24/7 for every citizen',
+                'Works in Hindi and English',
+              ].map((f) => (
+                <li key={f} className="flex items-center gap-3 text-gray-700">
+                  <FiCheckCircle className="text-green-500 flex-shrink-0" size={18} />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => {}}
+              className="btn-primary mt-8"
+            >
+              Try It Now 🤖
+            </button>
+          </div>
+
+          {}
+          <div className="glass-card p-6 space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-3 h-3 rounded-full bg-red-400" />
+              <div className="w-3 h-3 rounded-full bg-yellow-400" />
+              <div className="w-3 h-3 rounded-full bg-green-400" />
+              <span className="ml-2 text-sm text-gray-400">Guidance Assistant</span>
+            </div>
+            {[
+              { from: 'bot',  text: 'Hello! What are you looking for today?' },
+              { from: 'user', text: 'I need a government job in Chandigarh' },
+              { from: 'bot',  text: 'Great! I found 24 government job listings in Chandigarh. Redirecting you to the Jobs module…' },
+            ].map((m, i) => (
+              <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={m.from === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'}>
+                  <p className="text-sm">{m.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {}
+      <section className="bg-gradient-primary py-16 text-center">
+        <h2 className="text-3xl font-extrabold text-white mb-4">Ready to find your opportunity?</h2>
+        <p className="text-white/70 mb-8 max-w-lg mx-auto">
+          Join over 3 lakh citizens already using PGRKAM to build their careers.
+        </p>
+        <Link to="/register" className="inline-flex items-center gap-2 px-8 py-3 bg-white
+                                         text-primary-700 font-bold rounded-2xl hover:bg-blue-50 transition shadow-lg">
+          Create Free Account <FiArrowRight size={18} />
+        </Link>
+      </section>
+    </div>
+  )
+}
+
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { FiMail, FiLock, FiEye, FiEyeOff, FiLogIn } from 'react-icons/fi'
+import { MdWork } from 'react-icons/md'
+import Loader from '../components/Loader'
+
+export default function Login() {
+  const { login }      = useAuth()
+  const navigate       = useNavigate()
+  const [form, setForm]    = useState({ email: '', password: '' })
+  const [errors, setErrors]= useState({})
+  const [loading, setLoading] = useState(false)
+  const [showPw, setShowPw]   = useState(false)
+
+  const validate = () => {
+    const e = {}
+    if (!form.email)    e.email    = 'Email is required'
+    if (!form.password) e.password = 'Password is required'
+    return e
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    const errs = validate()
+    if (Object.keys(errs).length) { setErrors(errs); return }
+    setLoading(true)
+    const result = await login(form)
+    setLoading(false)
+    if (result.success) {
+      navigate(result.user?.role === 'admin' ? '/admin' : '/dashboard')
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex">
+      {}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-primary flex-col justify-between p-12">
+        <Link to="/" className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+            <MdWork className="text-white" size={22} />
+          </div>
+          <span className="text-white font-bold text-xl">PGRKAM</span>
+        </Link>
+
+        <div>
+          <h2 className="text-4xl font-extrabold text-white mb-4">
+            Welcome back to<br />Punjab's #1<br />Employment Portal
+          </h2>
+          <p className="text-white/70 max-w-sm">
+            Access thousands of government and private jobs, skill training programs,
+            and career guidance — all in one place.
+          </p>
+        </div>
+
+        <p className="text-white/40 text-sm">
+          © {new Date().getFullYear()} PGRKAM – Government of Punjab
+        </p>
+      </div>
+
+      {}
+      <div className="flex-1 flex items-center justify-center p-6 bg-gray-50">
+        <div className="w-full max-w-md">
+          {}
+          <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
+            <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
+              <MdWork className="text-white" size={20} />
+            </div>
+            <span className="font-bold text-primary-800">PGRKAM</span>
+          </Link>
+
+          <div className="glass-card p-8">
+            <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Sign In</h1>
+            <p className="text-gray-500 text-sm mb-8">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-primary-600 font-medium hover:underline">
+                Register here
+              </Link>
+            </p>
+
+            {}
+            <div className="bg-primary-50 border border-primary-100 rounded-xl p-3 mb-6 text-xs text-primary-700">
+              <strong>Demo:</strong> user@pgrkam.gov.in / password &nbsp;|&nbsp; admin@pgrkam.gov.in / password
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              {}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="you@example.com"
+                    className={`input-field pl-10 ${errors.email ? 'border-red-400 focus:ring-red-400' : ''}`}
+                  />
+                </div>
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+              </div>
+
+              {}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+                  Password
+                </label>
+                <div className="relative">
+                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type={showPw ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    placeholder="••••••••"
+                    className={`input-field pl-10 pr-10 ${errors.password ? 'border-red-400 focus:ring-red-400' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw(!showPw)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPw ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+              </div>
+
+              <button type="submit" disabled={loading} className="btn-primary w-full justify-center flex items-center gap-2">
+                {loading ? <Loader size="sm" text="" /> : <><FiLogIn size={16} /> Sign In</>}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { FiUser, FiMail, FiLock, FiPhone, FiEye, FiEyeOff, FiUserPlus } from 'react-icons/fi'
+import { MdWork } from 'react-icons/md'
+import Loader from '../components/Loader'
+
+export default function Register() {
+  const { register }   = useAuth()
+  const navigate       = useNavigate()
+  const [form, setForm]    = useState({ name: '', email: '', phone: '', password: '', password_confirmation: '' })
+  const [errors, setErrors]= useState({})
+  const [loading, setLoading] = useState(false)
+  const [showPw, setShowPw]   = useState(false)
+
+  const validate = () => {
+    const e = {}
+    if (!form.name)    e.name    = 'Full name is required'
+    if (!form.email)   e.email   = 'Email is required'
+    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = 'Enter a valid email'
+    if (!form.phone)   e.phone   = 'Phone number is required'
+    if (!form.password) e.password = 'Password is required'
+    else if (form.password.length < 8) e.password = 'Minimum 8 characters'
+    if (form.password !== form.password_confirmation)
+      e.password_confirmation = 'Passwords do not match'
+    return e
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    const errs = validate()
+    if (Object.keys(errs).length) { setErrors(errs); return }
+    setLoading(true)
+    const result = await register(form)
+    setLoading(false)
+    if (result.success) navigate('/dashboard')
+    else if (result.errors) setErrors(result.errors)
+  }
+
+  const field = (name) => ({
+    value: form[name],
+    onChange: (e) => { setForm({ ...form, [name]: e.target.value }); setErrors({ ...errors, [name]: '' }) },
+  })
+
+  return (
+    <div className="min-h-screen flex">
+      {}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-primary flex-col justify-between p-12">
+        <Link to="/" className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+            <MdWork className="text-white" size={22} />
+          </div>
+          <span className="text-white font-bold text-xl">PGRKAM</span>
+        </Link>
+        <div>
+          <h2 className="text-4xl font-extrabold text-white mb-4">
+            Join Punjab's Smart<br />Employment Network
+          </h2>
+          <p className="text-white/70 max-w-sm">
+            Register free and get instant access to job listings, training programs,
+            resume builder, and personalised career guidance.
+          </p>
+        </div>
+        <p className="text-white/40 text-sm">© {new Date().getFullYear()} PGRKAM – Government of Punjab</p>
+      </div>
+
+      {}
+      <div className="flex-1 flex items-center justify-center p-6 bg-gray-50 overflow-y-auto">
+        <div className="w-full max-w-md py-8">
+          <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
+            <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
+              <MdWork className="text-white" size={20} />
+            </div>
+            <span className="font-bold text-primary-800">PGRKAM</span>
+          </Link>
+
+          <div className="glass-card p-8">
+            <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Create Account</h1>
+            <p className="text-gray-500 text-sm mb-8">
+              Already registered?{' '}
+              <Link to="/login" className="text-primary-600 font-medium hover:underline">Sign in</Link>
+            </p>
+
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              {}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Full Name</label>
+                <div className="relative">
+                  <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input type="text" {...field('name')} placeholder="Harpreet Singh"
+                    className={`input-field pl-10 ${errors.name ? 'border-red-400' : ''}`} />
+                </div>
+                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+
+              {}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Email Address</label>
+                <div className="relative">
+                  <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input type="email" {...field('email')} placeholder="you@example.com"
+                    className={`input-field pl-10 ${errors.email ? 'border-red-400' : ''}`} />
+                </div>
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+              </div>
+
+              {}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Phone Number</label>
+                <div className="relative">
+                  <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input type="tel" {...field('phone')} placeholder="+91 98765 43210"
+                    className={`input-field pl-10 ${errors.phone ? 'border-red-400' : ''}`} />
+                </div>
+                {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+              </div>
+
+              {}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Password</label>
+                <div className="relative">
+                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input type={showPw ? 'text' : 'password'} {...field('password')} placeholder="Min 8 characters"
+                    className={`input-field pl-10 pr-10 ${errors.password ? 'border-red-400' : ''}`} />
+                  <button type="button" onClick={() => setShowPw(!showPw)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showPw ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+              </div>
+
+              {}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Confirm Password</label>
+                <div className="relative">
+                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input type="password" {...field('password_confirmation')} placeholder="Repeat password"
+                    className={`input-field pl-10 ${errors.password_confirmation ? 'border-red-400' : ''}`} />
+                </div>
+                {errors.password_confirmation && <p className="text-red-500 text-xs mt-1">{errors.password_confirmation}</p>}
+              </div>
+
+              <p className="text-xs text-gray-400">
+                By registering you agree to our{' '}
+                <a href="#" className="text-primary-600 hover:underline">Terms of Service</a> and{' '}
+                <a href="#" className="text-primary-600 hover:underline">Privacy Policy</a>.
+              </p>
+
+              <button type="submit" disabled={loading} className="btn-primary w-full justify-center flex items-center gap-2">
+                {loading ? <Loader size="sm" text="" /> : <><FiUserPlus size={16} /> Create Account</>}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+import { useAuth } from '../context/AuthContext'
+import DashboardCard from '../components/DashboardCard'
+import { FiBriefcase, FiBookOpen, FiFileText, FiMessageSquare, FiBell, FiUser } from 'react-icons/fi'
+import { dummyJobs, formatDate } from '../utils/helpers'
+import { Link } from 'react-router-dom'
+
+const stats = [
+  { title: 'Saved Jobs',          value: 12,  icon: <FiBriefcase size={22} />,     color: 'blue',   change: '+3',  trend: 'up'   },
+  { title: 'Training Enrolled',   value: 2,   icon: <FiBookOpen  size={22} />,     color: 'green',  change: '+1',  trend: 'up'   },
+  { title: 'Resume Score',        value: '78%',icon: <FiFileText size={22} />,     color: 'orange', change: '+5%', trend: 'up'   },
+  { title: 'Counselling Sessions',value: 1,   icon: <FiMessageSquare size={22} />, color: 'purple', change: null,  trend: null   },
+]
+
+export default function Dashboard() {
+  const { user } = useAuth()
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      {}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-extrabold text-gray-900">
+            Hello, {user?.name?.split(' ')[0]} 👋
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Here's what's happening with your employment journey today.
+          </p>
+        </div>
+        <Link to="/jobs" className="btn-primary text-sm">
+          Browse New Jobs
+        </Link>
+      </div>
+
+      {}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        {stats.map((s) => (
+          <DashboardCard key={s.title} {...s} />
+        ))}
+      </div>
+
+      {}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {}
+        <div className="lg:col-span-2 glass-card p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-bold text-gray-900">Recent Job Listings</h2>
+            <Link to="/jobs" className="text-sm text-primary-600 hover:underline">View all</Link>
+          </div>
+          <div className="space-y-3">
+            {dummyJobs.slice(0, 5).map((job) => (
+              <div key={job.id}
+                   className="flex items-center gap-4 p-3 rounded-xl hover:bg-primary-50 transition group">
+                <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
+                  <FiBriefcase className="text-primary-600" size={18} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-800 text-sm group-hover:text-primary-700 truncate">
+                    {job.title}
+                  </p>
+                  <p className="text-xs text-gray-500">{job.department} · {job.location}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xs font-medium text-gray-700">{job.salary}</p>
+                  <span className={`badge ${job.type === 'government' ? 'badge-blue' : 'badge-green'} mt-1`}>
+                    {job.type === 'government' ? 'Govt' : 'Private'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {}
+        <div className="space-y-5">
+          {}
+          <div className="glass-card p-5 text-center">
+            <div className="w-16 h-16 rounded-full bg-primary-600 flex items-center justify-center
+                            text-white text-2xl font-bold mx-auto mb-3">
+              {user?.name?.charAt(0).toUpperCase()}
+            </div>
+            <p className="font-bold text-gray-900">{user?.name}</p>
+            <p className="text-sm text-gray-500">{user?.email}</p>
+            <span className="badge badge-green mt-2">Active</span>
+            <Link to="/resume" className="btn-secondary w-full mt-4 text-sm flex justify-center">
+              <FiFileText size={14} className="mr-2" /> Update Resume
+            </Link>
+          </div>
+
+          {}
+          <div className="glass-card p-5">
+            <h3 className="font-bold text-gray-900 mb-4">Quick Actions</h3>
+            <div className="space-y-2">
+              {[
+                { label: 'Book Counselling', to: '/counselling', icon: FiMessageSquare, color: 'text-purple-600' },
+                { label: 'My Training',      to: '/training',    icon: FiBookOpen,      color: 'text-green-600' },
+                { label: 'Notifications',    to: '/dashboard',   icon: FiBell,          color: 'text-orange-600' },
+                { label: 'My Profile',       to: '/dashboard',   icon: FiUser,          color: 'text-blue-600' },
+              ].map(({ label, to, icon: Icon, color }) => (
+                <Link
+                  key={label}
+                  to={to}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition text-sm"
+                >
+                  <Icon size={16} className={color} />
+                  <span className="text-gray-700">{label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+import { useState } from 'react'
+import { FiSearch, FiMapPin, FiBriefcase, FiClock, FiDollarSign, FiFilter } from 'react-icons/fi'
+import { dummyJobs, formatDate } from '../utils/helpers'
+
+const jobTypes = ['All', 'Government', 'Private']
+const locations = ['All', 'Chandigarh', 'Mohali', 'Ludhiana', 'Amritsar', 'Patiala']
+
+export default function Jobs() {
+  const [search, setSearch]     = useState('')
+  const [type,   setType]       = useState('All')
+  const [loc,    setLoc]        = useState('All')
+  const [selected, setSelected] = useState(null)
+
+  const filtered = dummyJobs.filter((j) => {
+    const matchSearch = j.title.toLowerCase().includes(search.toLowerCase()) ||
+                        j.department.toLowerCase().includes(search.toLowerCase())
+    const matchType = type === 'All' || j.type === type.toLowerCase()
+    const matchLoc  = loc === 'All'  || j.location === loc
+    return matchSearch && matchType && matchLoc
+  })
+
+  return (
+    <div className="max-w-screen-xl mx-auto px-6 py-10">
+      {}
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold text-gray-900">Job Listings</h1>
+        <p className="text-gray-500 mt-1">
+          Discover {dummyJobs.length}+ government and private sector opportunities across Punjab.
+        </p>
+      </div>
+
+      {}
+      <div className="glass-card p-4 mb-6 flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search job title or department…"
+            className="input-field pl-9 text-sm"
+          />
+        </div>
+        <select value={type} onChange={(e) => setType(e.target.value)} className="input-field text-sm w-full sm:w-40">
+          {jobTypes.map((t) => <option key={t}>{t}</option>)}
+        </select>
+        <select value={loc} onChange={(e) => setLoc(e.target.value)} className="input-field text-sm w-full sm:w-40">
+          {locations.map((l) => <option key={l}>{l}</option>)}
+        </select>
+      </div>
+
+      {}
+      <p className="text-sm text-gray-500 mb-4">
+        Showing <strong>{filtered.length}</strong> results
+      </p>
+
+      {}
+      <div className="grid gap-4">
+        {filtered.length === 0 ? (
+          <div className="text-center py-20 text-gray-400">
+            <FiBriefcase size={40} className="mx-auto mb-3 opacity-50" />
+            <p>No jobs match your filters.</p>
+          </div>
+        ) : (
+          filtered.map((job) => (
+            <div
+              key={job.id}
+              onClick={() => setSelected(selected?.id === job.id ? null : job)}
+              className="glass-card p-5 cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                {}
+                <div className="w-12 h-12 rounded-2xl bg-primary-100 flex items-center justify-center flex-shrink-0">
+                  <FiBriefcase className="text-primary-600" size={22} />
+                </div>
+
+                {}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-bold text-gray-900 text-lg">{job.title}</h3>
+                    <span className={`badge flex-shrink-0 ${job.type === 'government' ? 'badge-blue' : 'badge-green'}`}>
+                      {job.type === 'government' ? '🏛️ Government' : '🏢 Private'}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 text-sm mt-0.5">{job.department}</p>
+                  <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-500">
+                    <span className="flex items-center gap-1"><FiMapPin size={13} /> {job.location}</span>
+                    <span className="flex items-center gap-1"><FiDollarSign size={13} /> {job.salary}</span>
+                    <span className="flex items-center gap-1"><FiClock size={13} /> Deadline: {formatDate(job.deadline)}</span>
+                  </div>
+                </div>
+
+                {}
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  className="btn-primary text-sm flex-shrink-0"
+                >
+                  Apply Now
+                </button>
+              </div>
+
+              {}
+              {selected?.id === job.id && (
+                <div className="mt-4 pt-4 border-t border-gray-100 animate-fade-in text-sm text-gray-600 space-y-2">
+                  <p>📅 Posted: {formatDate(job.posted)}</p>
+                  <p>📋 This is a {job.type} sector position with the {job.department}.</p>
+                  <p>📄 Candidates meeting the eligibility criteria may apply online through the official portal before {formatDate(job.deadline)}.</p>
+                  <button className="btn-primary mt-2 text-sm">Apply for This Job</button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+
+import { useState } from 'react'
+import { FiSearch, FiBookOpen, FiClock, FiUsers, FiCheckCircle } from 'react-icons/fi'
+import { dummyTrainings } from '../utils/helpers'
+import toast from 'react-hot-toast'
+
+const categories = ['All', 'IT', 'Electrical', 'Marketing', 'Handcraft', 'Communication']
+
+export default function Training() {
+  const [search, setSearch] = useState('')
+  const [cat,    setCat]    = useState('All')
+  const [enrolled, setEnrolled] = useState([])
+
+  const filtered = dummyTrainings.filter((t) => {
+    const matchSearch = t.title.toLowerCase().includes(search.toLowerCase())
+    const matchCat    = cat === 'All' || t.category === cat
+    return matchSearch && matchCat
+  })
+
+  const handleEnroll = (id) => {
+    if (enrolled.includes(id)) { toast('Already enrolled!'); return }
+    setEnrolled([...enrolled, id])
+    toast.success('Successfully enrolled in training!')
+  }
+
+  return (
+    <div className="max-w-screen-xl mx-auto px-6 py-10">
+      {}
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold text-gray-900">Skill Training Programs</h1>
+        <p className="text-gray-500 mt-1">
+          Free and subsidised skill development programs by the Government of Punjab.
+        </p>
+      </div>
+
+      {}
+      <div className="glass-card p-4 mb-6 flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search training programs…"
+            className="input-field pl-9 text-sm"
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {categories.map((c) => (
+            <button
+              key={c}
+              onClick={() => setCat(c)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                cat === c
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-700'
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filtered.map((t) => {
+          const isEnrolled  = enrolled.includes(t.id)
+          const isFull      = t.enrolled >= t.seats
+          const pct         = Math.round((t.enrolled / t.seats) * 100)
+
+          return (
+            <div key={t.id} className="glass-card p-6 flex flex-col gap-4 animate-slide-up">
+              {}
+              <div className="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center">
+                <FiBookOpen className="text-green-600" size={22} />
+              </div>
+
+              {}
+              <div>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-bold text-gray-900">{t.title}</h3>
+                  <span className="badge badge-green flex-shrink-0">{t.category}</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">{t.provider}</p>
+              </div>
+
+              {}
+              <div className="flex gap-4 text-xs text-gray-500">
+                <span className="flex items-center gap-1"><FiClock size={12} /> {t.duration}</span>
+                <span className="flex items-center gap-1"><FiUsers size={12} /> {t.enrolled}/{t.seats} seats</span>
+                <span className="font-medium text-primary-700">{t.fee}</span>
+              </div>
+
+              {}
+              <div>
+                <div className="flex justify-between text-xs text-gray-400 mb-1">
+                  <span>Seats filled</span>
+                  <span>{pct}%</span>
+                </div>
+                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${isFull ? 'bg-red-500' : 'bg-green-500'}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+
+              {}
+              <button
+                onClick={() => handleEnroll(t.id)}
+                disabled={isFull || isEnrolled}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl
+                            font-semibold text-sm transition-all duration-200
+                            ${isEnrolled
+                              ? 'bg-green-100 text-green-700 cursor-default'
+                              : isFull
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'btn-primary'
+                            }`}
+              >
+                {isEnrolled ? (
+                  <><FiCheckCircle size={15} /> Enrolled</>
+                ) : isFull ? (
+                  'No seats available'
+                ) : (
+                  'Enroll Now'
+                )}
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { FiUser, FiPhone, FiMail, FiMapPin, FiBriefcase, FiSave, FiDownload } from 'react-icons/fi'
+import toast from 'react-hot-toast'
+
+const emptyResume = {
+  personal: { name: '', email: '', phone: '', address: '', objective: '' },
+  education: [{ degree: '', institution: '', year: '', grade: '' }],
+  experience: [{ title: '', company: '', from: '', to: '', description: '' }],
+  skills: '',
+  languages: '',
+}
+
+export default function Resume() {
+  const { user }    = useAuth()
+  const [resume, setResume] = useState({
+    ...emptyResume,
+    personal: { name: user?.name || '', email: user?.email || '', phone: '', address: '', objective: '' },
+  })
+  const [tab, setTab] = useState('personal')
+  const [saved, setSaved] = useState(false)
+
+  const update = (section, value) =>
+    setResume((prev) => ({ ...prev, [section]: value }))
+
+  const updatePersonal = (field, val) =>
+    update('personal', { ...resume.personal, [field]: val })
+
+  const addItem = (section, template) =>
+    update(section, [...resume[section], template])
+
+  const updateItem = (section, idx, field, val) => {
+    const arr = [...resume[section]]
+    arr[idx] = { ...arr[idx], [field]: val }
+    update(section, arr)
+  }
+
+  const handleSave = () => {
+    setSaved(true)
+    toast.success('Resume saved successfully!')
+  }
+
+  const tabs = ['personal', 'education', 'experience', 'skills']
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-gray-900">Resume Builder</h1>
+          <p className="text-gray-500 text-sm mt-1">Build and download your professional resume.</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={handleSave} className="btn-secondary text-sm flex items-center gap-2">
+            <FiSave size={14} /> Save
+          </button>
+          <button className="btn-primary text-sm flex items-center gap-2" onClick={() => toast('Download feature coming soon!')}>
+            <FiDownload size={14} /> Download PDF
+          </button>
+        </div>
+      </div>
+
+      {}
+      <div className="flex gap-2 border-b border-gray-200">
+        {tabs.map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-colors ${
+              tab === t
+                ? 'border-primary-600 text-primary-700'
+                : 'border-transparent text-gray-500 hover:text-gray-800'
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      <div className="glass-card p-6">
+        {}
+        {tab === 'personal' && (
+          <div className="space-y-4">
+            <h2 className="font-bold text-gray-900">Personal Information</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                { label: 'Full Name',    field: 'name',    icon: FiUser,      type: 'text'  },
+                { label: 'Email',        field: 'email',   icon: FiMail,      type: 'email' },
+                { label: 'Phone',        field: 'phone',   icon: FiPhone,     type: 'tel'   },
+                { label: 'Address',      field: 'address', icon: FiMapPin,    type: 'text'  },
+              ].map(({ label, field, icon: Icon, type }) => (
+                <div key={field}>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">{label}</label>
+                  <div className="relative">
+                    <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+                    <input type={type} value={resume.personal[field]}
+                      onChange={(e) => updatePersonal(field, e.target.value)}
+                      className="input-field pl-9 text-sm" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Career Objective</label>
+              <textarea rows={4} value={resume.personal.objective}
+                onChange={(e) => updatePersonal('objective', e.target.value)}
+                placeholder="Brief career objective or summary…"
+                className="input-field text-sm resize-none" />
+            </div>
+          </div>
+        )}
+
+        {}
+        {tab === 'education' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-gray-900">Education</h2>
+              <button onClick={() => addItem('education', { degree: '', institution: '', year: '', grade: '' })}
+                className="btn-secondary text-xs">+ Add</button>
+            </div>
+            {resume.education.map((edu, i) => (
+              <div key={i} className="p-4 border border-gray-200 rounded-xl space-y-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase">Education #{i + 1}</p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {[
+                    { label: 'Degree / Course', field: 'degree' },
+                    { label: 'Institution',      field: 'institution' },
+                    { label: 'Year',             field: 'year' },
+                    { label: 'Grade / CGPA',     field: 'grade' },
+                  ].map(({ label, field }) => (
+                    <div key={field}>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">{label}</label>
+                      <input type="text" value={edu[field]}
+                        onChange={(e) => updateItem('education', i, field, e.target.value)}
+                        className="input-field text-sm" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {}
+        {tab === 'experience' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-gray-900">Work Experience</h2>
+              <button onClick={() => addItem('experience', { title: '', company: '', from: '', to: '', description: '' })}
+                className="btn-secondary text-xs">+ Add</button>
+            </div>
+            {resume.experience.map((exp, i) => (
+              <div key={i} className="p-4 border border-gray-200 rounded-xl space-y-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase">Experience #{i + 1}</p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {[
+                    { label: 'Job Title',  field: 'title'   },
+                    { label: 'Company',    field: 'company' },
+                    { label: 'From',       field: 'from'    },
+                    { label: 'To',         field: 'to'      },
+                  ].map(({ label, field }) => (
+                    <div key={field}>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">{label}</label>
+                      <input type="text" value={exp[field]}
+                        onChange={(e) => updateItem('experience', i, field, e.target.value)}
+                        className="input-field text-sm" />
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Description</label>
+                  <textarea rows={3} value={exp.description}
+                    onChange={(e) => updateItem('experience', i, 'description', e.target.value)}
+                    className="input-field text-sm resize-none" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {}
+        {tab === 'skills' && (
+          <div className="space-y-5">
+            <h2 className="font-bold text-gray-900">Skills & Languages</h2>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                Technical / Professional Skills
+              </label>
+              <textarea rows={4} value={resume.skills}
+                onChange={(e) => update('skills', e.target.value)}
+                placeholder="e.g., MS Office, Tally, Web Development, Electrician Work…"
+                className="input-field text-sm resize-none" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Languages Known</label>
+              <input type="text" value={resume.languages}
+                onChange={(e) => update('languages', e.target.value)}
+                placeholder="e.g., Punjabi, Hindi, English"
+                className="input-field text-sm" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {}
+      {saved && (
+        <div className="glass-card p-4 border-l-4 border-green-500 animate-fade-in">
+          <p className="text-green-700 text-sm font-medium">
+            ✅ Resume saved! Use "Download PDF" to export your resume.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { FiMessageSquare, FiCalendar, FiClock, FiCheckCircle } from 'react-icons/fi'
+import toast from 'react-hot-toast'
+
+const slots = ['10:00 AM', '11:00 AM', '12:00 PM', '2:00 PM', '3:00 PM', '4:00 PM']
+const counsellors = [
+  { id: 1, name: 'Dr. Rajinder Kaur',  expertise: 'Career Planning & IT',          rating: 4.9, sessions: 320 },
+  { id: 2, name: 'Mr. Amandeep Singh', expertise: 'Government Jobs & Upsc Prep',   rating: 4.7, sessions: 210 },
+  { id: 3, name: 'Ms. Priya Sharma',   expertise: 'Skill Development & Placement', rating: 4.8, sessions: 180 },
+]
+
+export default function Counselling() {
+  const { user } = useAuth()
+  const [form, setForm] = useState({ counsellor_id: '', date: '', slot: '', topic: '', notes: '' })
+  const [submitted, setSubmitted] = useState(false)
+  const [myRequests] = useState([
+    { id: 1, counsellor: 'Dr. Rajinder Kaur', date: '2026-05-28', slot: '11:00 AM', topic: 'IT Career', status: 'confirmed' },
+  ])
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!form.counsellor_id || !form.date || !form.slot || !form.topic) {
+      toast.error('Please fill all required fields')
+      return
+    }
+    setSubmitted(true)
+    toast.success('Counselling session booked successfully!')
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+      <div>
+        <h1 className="text-2xl font-extrabold text-gray-900">Career Counselling</h1>
+        <p className="text-gray-500 text-sm mt-1">
+          Book a one-on-one session with our certified career counsellors.
+        </p>
+      </div>
+
+      {}
+      <div>
+        <h2 className="font-bold text-gray-900 mb-4">Our Counsellors</h2>
+        <div className="grid sm:grid-cols-3 gap-4">
+          {counsellors.map((c) => (
+            <div
+              key={c.id}
+              onClick={() => setForm({ ...form, counsellor_id: String(c.id) })}
+              className={`glass-card p-4 cursor-pointer transition-all duration-200
+                          ${form.counsellor_id === String(c.id)
+                            ? 'ring-2 ring-primary-500 shadow-lg'
+                            : 'hover:shadow-md'}`}
+            >
+              <div className="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center
+                              text-white font-bold text-lg mx-auto mb-3">
+                {c.name.charAt(0)}
+              </div>
+              <p className="font-semibold text-gray-900 text-center text-sm">{c.name}</p>
+              <p className="text-xs text-gray-500 text-center mt-0.5">{c.expertise}</p>
+              <div className="flex justify-center gap-3 mt-2 text-xs text-gray-500">
+                <span>⭐ {c.rating}</span>
+                <span>💬 {c.sessions} sessions</span>
+              </div>
+              {form.counsellor_id === String(c.id) && (
+                <p className="text-center text-xs text-primary-600 font-medium mt-2">Selected</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {}
+      {!submitted ? (
+        <div className="glass-card p-6">
+          <h2 className="font-bold text-gray-900 mb-5">Book a Session</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Preferred Date *</label>
+                <div className="relative">
+                  <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+                  <input type="date" value={form.date}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    className="input-field pl-9 text-sm" />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Time Slot *</label>
+                <div className="flex flex-wrap gap-2">
+                  {slots.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setForm({ ...form, slot: s })}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                        form.slot === s
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-primary-50'
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Topic / Query *</label>
+              <input type="text" value={form.topic}
+                onChange={(e) => setForm({ ...form, topic: e.target.value })}
+                placeholder="e.g., Career change, Government exam prep, Resume review"
+                className="input-field text-sm" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Additional Notes</label>
+              <textarea rows={3} value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                placeholder="Any specific questions or background information…"
+                className="input-field text-sm resize-none" />
+            </div>
+            <button type="submit" className="btn-primary flex items-center gap-2">
+              <FiMessageSquare size={15} /> Book Session
+            </button>
+          </form>
+        </div>
+      ) : (
+        <div className="glass-card p-8 text-center animate-slide-up">
+          <FiCheckCircle size={48} className="text-green-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Session Booked!</h2>
+          <p className="text-gray-500 text-sm">
+            Your session has been confirmed. You'll receive a reminder 30 minutes before.
+          </p>
+          <button onClick={() => setSubmitted(false)} className="btn-secondary mt-6 text-sm">
+            Book Another
+          </button>
+        </div>
+      )}
+
+      {}
+      <div className="glass-card p-6">
+        <h2 className="font-bold text-gray-900 mb-4">My Booked Sessions</h2>
+        {myRequests.length === 0 ? (
+          <p className="text-gray-400 text-sm">No sessions booked yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {myRequests.map((r) => (
+              <div key={r.id} className="flex items-center gap-4 p-3 rounded-xl bg-gray-50">
+                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                  <FiMessageSquare className="text-primary-600" size={18} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-800 text-sm">{r.counsellor}</p>
+                  <p className="text-xs text-gray-500">{r.topic} · {r.date} · {r.slot}</p>
+                </div>
+                <span className={`badge ${r.status === 'confirmed' ? 'badge-green' : 'badge-yellow'}`}>
+                  {r.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+import DashboardCard from '../components/DashboardCard'
+import { FiUsers, FiBriefcase, FiBookOpen, FiMessageSquare, FiPlus, FiTrash2, FiEye } from 'react-icons/fi'
+import { dummyJobs, dummyTrainings, formatDate } from '../utils/helpers'
+import { useState } from 'react'
+import toast from 'react-hot-toast'
+
+const mockUsers = [
+  { id: 1, name: 'Harpreet Singh',  email: 'h.singh@email.com',    role: 'user',  status: 'active',   joined: '2026-01-15' },
+  { id: 2, name: 'Gurpreet Kaur',   email: 'g.kaur@email.com',     role: 'user',  status: 'active',   joined: '2026-02-20' },
+  { id: 3, name: 'Amandeep Sharma', email: 'a.sharma@email.com',   role: 'user',  status: 'inactive', joined: '2026-03-10' },
+  { id: 4, name: 'Rajinder Singh',  email: 'r.singh@email.com',    role: 'admin', status: 'active',   joined: '2025-12-01' },
+]
+
+const adminStats = [
+  { title: 'Total Users',        value: 3452,  icon: <FiUsers       size={22} />, color: 'blue',   change: '+12%', trend: 'up'   },
+  { title: 'Active Jobs',        value: 186,   icon: <FiBriefcase   size={22} />, color: 'green',  change: '+8%',  trend: 'up'   },
+  { title: 'Training Programs',  value: 48,    icon: <FiBookOpen    size={22} />, color: 'orange', change: '+3',   trend: 'up'   },
+  { title: 'Counselling Reqs',   value: 94,    icon: <FiMessageSquare size={22}/>, color: 'purple', change: '+21%', trend: 'up'  },
+]
+
+export default function AdminDashboard() {
+  const [users, setUsers] = useState(mockUsers)
+  const [tab, setTab] = useState('users')
+
+  const deleteUser = (id) => {
+    setUsers(users.filter((u) => u.id !== id))
+    toast.success('User removed')
+  }
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      {}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage PGRKAM services and users.</p>
+        </div>
+        <button className="btn-primary text-sm flex items-center gap-2">
+          <FiPlus size={15} /> Add Service
+        </button>
+      </div>
+
+      {}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        {adminStats.map((s) => <DashboardCard key={s.title} {...s} />)}
+      </div>
+
+      {}
+      <div className="flex gap-1 border-b border-gray-200">
+        {['users', 'jobs', 'trainings'].map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-5 py-2.5 text-sm font-medium capitalize border-b-2 transition ${
+              tab === t ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {}
+      {tab === 'users' && (
+        <div className="glass-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <th className="px-6 py-3">User</th>
+                  <th className="px-6 py-3">Role</th>
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Joined</th>
+                  <th className="px-6 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {users.map((u) => (
+                  <tr key={u.id} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center
+                                        text-white font-semibold text-sm flex-shrink-0">
+                          {u.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{u.name}</p>
+                          <p className="text-xs text-gray-400">{u.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`badge ${u.role === 'admin' ? 'badge-blue' : 'badge-green'}`}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`badge ${u.status === 'active' ? 'badge-green' : 'badge-yellow'}`}>
+                        {u.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-500">{formatDate(u.joined)}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button className="p-1.5 text-gray-400 hover:text-primary-600 transition rounded">
+                          <FiEye size={15} />
+                        </button>
+                        <button onClick={() => deleteUser(u.id)}
+                          className="p-1.5 text-gray-400 hover:text-red-500 transition rounded">
+                          <FiTrash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {}
+      {tab === 'jobs' && (
+        <div className="glass-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <th className="px-6 py-3">Job Title</th>
+                  <th className="px-6 py-3">Department</th>
+                  <th className="px-6 py-3">Type</th>
+                  <th className="px-6 py-3">Deadline</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {dummyJobs.map((j) => (
+                  <tr key={j.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 font-medium text-gray-900">{j.title}</td>
+                    <td className="px-6 py-4 text-gray-500">{j.department}</td>
+                    <td className="px-6 py-4">
+                      <span className={`badge ${j.type === 'government' ? 'badge-blue' : 'badge-green'}`}>
+                        {j.type}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-500">{formatDate(j.deadline)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {}
+      {tab === 'trainings' && (
+        <div className="glass-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <th className="px-6 py-3">Program</th>
+                  <th className="px-6 py-3">Provider</th>
+                  <th className="px-6 py-3">Category</th>
+                  <th className="px-6 py-3">Seats</th>
+                  <th className="px-6 py-3">Fee</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {dummyTrainings.map((t) => (
+                  <tr key={t.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 font-medium text-gray-900">{t.title}</td>
+                    <td className="px-6 py-4 text-gray-500">{t.provider}</td>
+                    <td className="px-6 py-4"><span className="badge badge-green">{t.category}</span></td>
+                    <td className="px-6 py-4 text-gray-500">{t.enrolled}/{t.seats}</td>
+                    <td className="px-6 py-4 font-medium text-primary-700">{t.fee}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+import { FiTrendingUp, FiUsers, FiBriefcase, FiBookOpen, FiDownload } from 'react-icons/fi'
+import DashboardCard from '../components/DashboardCard'
+
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+const jobsData    = [420, 580, 490, 700, 820, 940]
+const usersData   = [1200, 1450, 1680, 1920, 2300, 2800]
+
+function SimpleBar({ values, color }) {
+  const max = Math.max(...values)
+  return (
+    <div className="flex items-end gap-2 h-32">
+      {values.map((v, i) => (
+        <div key={i} className="flex-1 flex flex-col items-center gap-1">
+          <div
+            className={`w-full rounded-t-md ${color} transition-all duration-500`}
+            style={{ height: `${(v / max) * 100}%` }}
+          />
+          <span className="text-xs text-gray-400">{months[i]}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default function Reports() {
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-gray-900">Reports & Analytics</h1>
+          <p className="text-gray-500 text-sm mt-1">Overview of portal activity – 2026</p>
+        </div>
+        <button className="btn-secondary text-sm flex items-center gap-2">
+          <FiDownload size={14} /> Export Report
+        </button>
+      </div>
+
+      {}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        {[
+          { title: 'Total Registrations', value: 3452,  icon: <FiUsers       size={22} />, color: 'blue',   change: '+18%', trend: 'up' },
+          { title: 'Jobs Applied',        value: 12640, icon: <FiBriefcase   size={22} />, color: 'green',  change: '+24%', trend: 'up' },
+          { title: 'Training Enrolments', value: 2180,  icon: <FiBookOpen    size={22} />, color: 'orange', change: '+11%', trend: 'up' },
+          { title: 'Placements',          value: 890,   icon: <FiTrendingUp  size={22} />, color: 'purple', change: '+9%',  trend: 'up' },
+        ].map((s) => <DashboardCard key={s.title} {...s} />)}
+      </div>
+
+      {}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="glass-card p-6">
+          <h3 className="font-bold text-gray-900 mb-1">Job Listings (Jan–Jun 2026)</h3>
+          <p className="text-xs text-gray-400 mb-4">Monthly new job postings</p>
+          <SimpleBar values={jobsData} color="bg-primary-500" />
+        </div>
+        <div className="glass-card p-6">
+          <h3 className="font-bold text-gray-900 mb-1">New Registrations (Jan–Jun 2026)</h3>
+          <p className="text-xs text-gray-400 mb-4">Cumulative user sign-ups</p>
+          <SimpleBar values={usersData} color="bg-green-500" />
+        </div>
+      </div>
+
+      {}
+      <div className="glass-card p-6">
+        <h3 className="font-bold text-gray-900 mb-5">District-wise Placement Summary</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
+                <th className="pb-3">District</th>
+                <th className="pb-3">Registrations</th>
+                <th className="pb-3">Placements</th>
+                <th className="pb-3">Success Rate</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {[
+                { district: 'Chandigarh', reg: 820,  placed: 310, rate: 37.8 },
+                { district: 'Ludhiana',   reg: 640,  placed: 230, rate: 35.9 },
+                { district: 'Amritsar',   reg: 510,  placed: 180, rate: 35.3 },
+                { district: 'Mohali',     reg: 480,  placed: 195, rate: 40.6 },
+                { district: 'Patiala',    reg: 370,  placed: 120, rate: 32.4 },
+                { district: 'Jalandhar',  reg: 420,  placed: 142, rate: 33.8 },
+              ].map((r) => (
+                <tr key={r.district} className="hover:bg-gray-50">
+                  <td className="py-3 font-medium text-gray-900">{r.district}</td>
+                  <td className="py-3 text-gray-600">{r.reg.toLocaleString()}</td>
+                  <td className="py-3 text-gray-600">{r.placed.toLocaleString()}</td>
+                  <td className="py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary-500 rounded-full" style={{ width: `${r.rate}%` }} />
+                      </div>
+                      <span className="text-xs font-medium text-gray-700 w-10">{r.rate}%</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+import ServiceCard from '../components/ServiceCard'
+import { dummyServices } from '../utils/helpers'
+
+export default function Services() {
+  return (
+    <div className="max-w-screen-xl mx-auto px-6 py-16">
+      <div className="text-center mb-12">
+        <span className="badge badge-blue mb-3">All Services</span>
+        <h1 className="text-3xl font-extrabold text-gray-900">Employment Services</h1>
+        <p className="text-gray-500 mt-3 max-w-xl mx-auto">
+          PGRKAM offers a comprehensive range of employment and career development services
+          for every citizen of Punjab.
+        </p>
+      </div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {dummyServices.map((s) => (
+          <ServiceCard key={s.id} {...s} />
+        ))}
+      </div>
+
+      {}
+      <div className="mt-16">
+        <h2 className="text-2xl font-extrabold text-gray-900 mb-6">Employment Schemes</h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {[
+            {
+              title: 'Ghar Ghar Rozgar Scheme',
+              desc:  'Punjab government initiative providing job placement assistance to unemployed youth.',
+              tag:   'State Scheme',
+            },
+            {
+              title: 'PM KAUSHAL VIKAS YOJANA',
+              desc:  'Central government skill development scheme providing free short-term training.',
+              tag:   'Central Scheme',
+            },
+            {
+              title: 'Startup Punjab',
+              desc:  'Entrepreneurship support with seed funding and mentorship for new ventures.',
+              tag:   'Startup',
+            },
+            {
+              title: 'Apprenticeship Scheme',
+              desc:  'Learn while you earn – structured on-the-job training with monthly stipend.',
+              tag:   'Apprenticeship',
+            },
+          ].map((s) => (
+            <div key={s.title} className="glass-card p-5">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="font-bold text-gray-900">{s.title}</h3>
+                <span className="badge badge-blue flex-shrink-0">{s.tag}</span>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">{s.desc}</p>
+              <button className="btn-primary text-sm mt-4">Learn More</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+import { FiTarget, FiUsers, FiAward, FiGlobe } from 'react-icons/fi'
+
+export default function About() {
+  return (
+    <div>
+      {}
+      <section className="bg-gradient-primary py-20 text-center px-6">
+        <h1 className="text-4xl font-extrabold text-white mb-4">About PGRKAM</h1>
+        <p className="text-white/70 max-w-2xl mx-auto text-lg">
+          Punjab Government Rozgar Kendra & Employment Portal — empowering the state's workforce
+          since 2018 with smart digital employment services.
+        </p>
+      </section>
+
+      {}
+      <section className="max-w-screen-xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-10">
+        <div className="glass-card p-8">
+          <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
+            <FiTarget className="text-blue-700" size={24} />
+          </div>
+          <h2 className="text-xl font-extrabold text-gray-900 mb-3">Our Mission</h2>
+          <p className="text-gray-600 leading-relaxed">
+            To bridge the gap between job seekers and employment opportunities in Punjab through
+            a technology-driven, transparent and accessible digital platform that reaches every
+            corner of the state.
+          </p>
+        </div>
+        <div className="glass-card p-8">
+          <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
+            <FiGlobe className="text-green-700" size={24} />
+          </div>
+          <h2 className="text-xl font-extrabold text-gray-900 mb-3">Our Vision</h2>
+          <p className="text-gray-600 leading-relaxed">
+            A fully employed Punjab where every youth has access to quality livelihood
+            opportunities, skill training and career guidance — regardless of their
+            background or location.
+          </p>
+        </div>
+      </section>
+
+      {}
+      <section className="bg-primary-900 py-16">
+        <div className="max-w-screen-xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          {[
+            { v: '3 Lakh+', l: 'Registered Users' },
+            { v: '50,000+', l: 'Jobs Listed'       },
+            { v: '1,200+',  l: 'Training Programs' },
+            { v: '22',      l: 'Districts Covered' },
+          ].map(({ v, l }) => (
+            <div key={l}>
+              <p className="text-3xl font-extrabold text-white">{v}</p>
+              <p className="text-primary-200 text-sm mt-1">{l}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {}
+      <section className="max-w-screen-xl mx-auto px-6 py-16">
+        <h2 className="text-2xl font-extrabold text-gray-900 text-center mb-10">Our Leadership</h2>
+        <div className="grid sm:grid-cols-3 gap-6">
+          {[
+            { name: 'Sh. Amritpal Singh IAS', role: 'Secretary, Employment Dept.', avatar: 'A' },
+            { name: 'Ms. Simranjit Kaur IAS', role: 'Director, Employment',        avatar: 'S' },
+            { name: 'Mr. Kulwinder Singh',    role: 'IT Head, PGRKAM Portal',      avatar: 'K' },
+          ].map((p) => (
+            <div key={p.name} className="glass-card p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-primary-600 flex items-center justify-center
+                              text-white text-2xl font-bold mx-auto mb-4">
+                {p.avatar}
+              </div>
+              <p className="font-bold text-gray-900">{p.name}</p>
+              <p className="text-sm text-gray-500 mt-1">{p.role}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+import { useState } from 'react'
+import { FiMail, FiPhone, FiMapPin, FiSend, FiCheckCircle } from 'react-icons/fi'
+import toast from 'react-hot-toast'
+
+export default function Contact() {
+  const [form, setForm]     = useState({ name: '', email: '', phone: '', subject: '', message: '' })
+  const [submitted, setSub] = useState(false)
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!form.name || !form.email || !form.message) { toast.error('Please fill required fields'); return }
+    setSub(true)
+    toast.success('Message sent! We will respond within 2 business days.')
+  }
+
+  return (
+    <div className="max-w-screen-xl mx-auto px-6 py-16">
+      <div className="text-center mb-12">
+        <h1 className="text-3xl font-extrabold text-gray-900">Contact Us</h1>
+        <p className="text-gray-500 mt-3 max-w-lg mx-auto">
+          Have a query? Reach out to the PGRKAM helpdesk — we're here to assist you.
+        </p>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-8">
+        {}
+        <div className="space-y-4">
+          {[
+            { icon: FiMapPin, label: 'Address',    value: 'SCO 153-155, Sector 34-A,\nChandigarh – 160022', color: 'text-blue-600', bg: 'bg-blue-100' },
+            { icon: FiPhone,  label: 'Phone',       value: '0172-2664000\n18001800000 (Toll Free)', color: 'text-green-600', bg: 'bg-green-100' },
+            { icon: FiMail,   label: 'Email',       value: 'helpdesk@pgrkam.gov.in\nsupport@pgrkam.gov.in', color: 'text-purple-600', bg: 'bg-purple-100' },
+          ].map(({ icon: Icon, label, value, color, bg }) => (
+            <div key={label} className="glass-card p-5 flex items-start gap-4">
+              <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}>
+                <Icon className={color} size={18} />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">{label}</p>
+                <p className="text-gray-500 text-sm mt-0.5 whitespace-pre-line">{value}</p>
+              </div>
+            </div>
+          ))}
+
+          {}
+          <div className="glass-card p-5">
+            <p className="font-semibold text-gray-900 text-sm mb-2">Office Hours</p>
+            <div className="space-y-1 text-sm text-gray-500">
+              <p>Mon – Fri: 9:00 AM – 5:00 PM</p>
+              <p>Saturday: 9:00 AM – 1:00 PM</p>
+              <p>Sunday: Closed</p>
+            </div>
+          </div>
+        </div>
+
+        {}
+        <div className="lg:col-span-2">
+          {!submitted ? (
+            <div className="glass-card p-8">
+              <h2 className="font-bold text-gray-900 mb-6">Send us a Message</h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Full Name *</label>
+                    <input type="text" value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="Your name" className="input-field text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Email *</label>
+                    <input type="email" value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="you@example.com" className="input-field text-sm" />
+                  </div>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Phone</label>
+                    <input type="tel" value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      placeholder="+91 98765 43210" className="input-field text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Subject</label>
+                    <input type="text" value={form.subject}
+                      onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                      placeholder="e.g., Job Query" className="input-field text-sm" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Message *</label>
+                  <textarea rows={5} value={form.message}
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    placeholder="Describe your query in detail…"
+                    className="input-field text-sm resize-none" />
+                </div>
+                <button type="submit" className="btn-primary flex items-center gap-2">
+                  <FiSend size={15} /> Send Message
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="glass-card p-12 text-center animate-slide-up">
+              <FiCheckCircle size={56} className="text-green-500 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Message Received!</h2>
+              <p className="text-gray-500 text-sm">Our team will reply to {form.email} within 2 business days.</p>
+              <button onClick={() => { setForm({ name: '', email: '', phone: '', subject: '', message: '' }); setSub(false) }}
+                className="btn-secondary mt-6 text-sm">Send Another</button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+import { Link } from 'react-router-dom'
+import { FiHome, FiArrowLeft } from 'react-icons/fi'
+
+export default function NotFound() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-blue-50 px-6">
+      <div className="text-center max-w-md">
+        <div className="text-8xl font-extrabold text-primary-200 select-none mb-4">404</div>
+        <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Page Not Found</h1>
+        <p className="text-gray-500 mb-8">
+          The page you're looking for doesn't exist or has been moved.
+        </p>
+        <div className="flex gap-3 justify-center">
+          <Link to="/" className="btn-primary flex items-center gap-2">
+            <FiHome size={15} /> Go Home
+          </Link>
+          <button onClick={() => window.history.back()} className="btn-secondary flex items-center gap-2">
+            <FiArrowLeft size={15} /> Go Back
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->statefulApi();
+
+        $middleware->alias([
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+        ]);
+
+        $middleware->trustHosts(fn () => [
+            'localhost',
+            '127.0.0.1',
+        ]);
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->shouldRenderJsonWhen(
+            fn ($request) => $request->is('api/*') || $request->expectsJson()
+        );
+    })->create();
+
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\JobController;
+use App\Http\Controllers\Api\TrainingController;
+use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\ChatGuideController;
+use App\Http\Controllers\Api\CounsellingController;
+use App\Http\Controllers\Api\AdminController;
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login',    [AuthController::class, 'login']);
+
+Route::get('/services',        [ServiceController::class, 'index']);
+Route::get('/services/{id}',   [ServiceController::class, 'show']);
+Route::get('/jobs',            [JobController::class,     'index']);
+Route::get('/jobs/{id}',       [JobController::class,     'show']);
+Route::get('/training',        [TrainingController::class, 'index']);
+Route::get('/training/{id}',   [TrainingController::class, 'show']);
+
+Route::post('/chat-guide',     [ChatGuideController::class, 'handle']);
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::prefix('user')->group(function () {
+        Route::get('/profile',                   [UserController::class, 'profile']);
+        Route::put('/profile',                   [UserController::class, 'updateProfile']);
+        Route::get('/notifications',             [UserController::class, 'notifications']);
+        Route::put('/notifications/{id}/read',   [UserController::class, 'markNotificationRead']);
+        Route::get('/saved-jobs',                [UserController::class, 'savedJobs']);
+        Route::get('/resume',                    [UserController::class, 'getResume']);
+        Route::post('/resume',                   [UserController::class, 'saveResume']);
+        Route::get('/counselling',               [UserController::class, 'counsellingSessions']);
+    });
+
+    Route::post('/jobs/{id}/save',   [JobController::class, 'saveJob']);
+    Route::post('/jobs/{id}/apply',  [JobController::class, 'applyJob']);
+
+    Route::post('/training/{id}/enroll', [TrainingController::class, 'enroll']);
+
+    Route::post('/counselling',         [CounsellingController::class, 'book']);
+    Route::get('/counselling/{id}',     [CounsellingController::class, 'show']);
+    Route::delete('/counselling/{id}',  [CounsellingController::class, 'cancel']);
+
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        Route::get('/dashboard',          [AdminController::class, 'dashboard']);
+        Route::get('/users',              [AdminController::class, 'users']);
+        Route::delete('/users/{id}',      [AdminController::class, 'deleteUser']);
+        Route::get('/reports',            [AdminController::class, 'reports']);
+
+        Route::post('/services',          [ServiceController::class, 'store']);
+        Route::put('/services/{id}',      [ServiceController::class, 'update']);
+        Route::delete('/services/{id}',   [ServiceController::class, 'destroy']);
+
+        Route::post('/jobs',              [JobController::class, 'store']);
+        Route::put('/jobs/{id}',          [JobController::class, 'update']);
+        Route::delete('/jobs/{id}',       [JobController::class, 'destroy']);
+
+        Route::get('/schemes',            [AdminController::class, 'schemes']);
+        Route::post('/schemes',           [AdminController::class, 'addScheme']);
+    });
+});
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
+
+protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'password',
+        'role',
+        'district',
+        'qualification',
+        'skills',
+        'profile_photo',
+        'is_active',
+        'last_login_at',
+    ];
+
+protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'last_login_at'     => 'datetime',
+            'is_active'         => 'boolean',
+            'password'          => 'hashed',
+        ];
+    }
+
+public function resume()
+    {
+        return $this->hasOne(Resume::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function counsellingRequests()
+    {
+        return $this->hasMany(CounsellingRequest::class);
+    }
+
+    public function savedJobs()
+    {
+        return $this->belongsToMany(Job::class, 'saved_jobs', 'user_id', 'job_id')
+                    ->withTimestamps();
+    }
+
+    public function enrolledTrainings()
+    {
+        return $this->belongsToMany(Training::class, 'training_user')
+                    ->withPivot('status', 'enrolled_at');
+    }
+
+public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+}
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Job extends Model
+{
+    use HasFactory;
+
+    protected $table = 'job_listings';
+
+    protected $fillable = [
+        'title', 'department', 'location', 'type', 'salary_range',
+        'description', 'qualifications', 'vacancies', 'application_deadline',
+        'posted_on', 'apply_url', 'is_active', 'created_by',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'qualifications'        => 'array',
+            'application_deadline'  => 'date',
+            'posted_on'             => 'date',
+            'is_active'             => 'boolean',
+        ];
+    }
+
+public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function savedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'saved_jobs');
+    }
+
+public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeGovernment($query)
+    {
+        return $query->where('type', 'government');
+    }
+
+    public function scopePrivate($query)
+    {
+        return $query->where('type', 'private');
+    }
+}
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Training extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'title', 'provider', 'category', 'duration', 'total_seats',
+        'enrolled_count', 'fee', 'description', 'syllabus',
+        'certificate_type', 'start_date', 'end_date', 'is_active',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'syllabus'   => 'array',
+            'start_date' => 'date',
+            'end_date'   => 'date',
+            'is_active'  => 'boolean',
+        ];
+    }
+
+public function enrolledUsers()
+    {
+        return $this->belongsToMany(User::class, 'training_user')
+                    ->withPivot('status', 'enrolled_at');
+    }
+
+public function getAvailableSeatsAttribute(): int
+    {
+        return max(0, $this->total_seats - $this->enrolled_count);
+    }
+
+    public function getIsFullAttribute(): bool
+    {
+        return $this->enrolled_count >= $this->total_seats;
+    }
+}
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Service extends Model
+{
+    protected $fillable = [
+        'title', 'description', 'icon', 'color',
+        'path', 'url', 'is_active', 'sort_order',
+    ];
+
+    protected function casts(): array
+    {
+        return ['is_active' => 'boolean'];
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true)->orderBy('sort_order');
+    }
+}
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class CounsellingRequest extends Model
+{
+    protected $fillable = [
+        'user_id', 'counsellor_name', 'preferred_date', 'time_slot',
+        'topic', 'notes', 'status', 'counsellor_feedback',
+    ];
+
+    protected function casts(): array
+    {
+        return ['preferred_date' => 'date'];
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Resume extends Model
+{
+    protected $fillable = [
+        'user_id', 'personal', 'education', 'experience',
+        'skills', 'languages', 'score', 'pdf_path',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'personal'   => 'array',
+            'education'  => 'array',
+            'experience' => 'array',
+        ];
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Notification extends Model
+{
+    protected $fillable = [
+        'user_id', 'title', 'message', 'type', 'link', 'is_read',
+    ];
+
+    protected function casts(): array
+    {
+        return ['is_read' => 'boolean'];
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function scopeUnread($query)
+    {
+        return $query->where('is_read', false);
+    }
+}
+
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class RoleMiddleware
+{
+    public function handle(Request $request, Closure $next, string $role): Response
+    {
+        if (! $request->user() || $request->user()->role !== $role) {
+            return response()->json(['message' => 'Forbidden – insufficient permissions'], 403);
+        }
+
+        return $next($request);
+    }
+}
+
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
+
+class AuthController extends Controller
+{
+    
+    public function register(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name'                  => ['required', 'string', 'max:255'],
+            'email'                 => ['required', 'email', 'max:255', 'unique:users'],
+            'phone'                 => ['nullable', 'string', 'max:15'],
+            'password'              => ['required', 'confirmed', Password::min(8)],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'phone'    => $request->phone,
+            'password' => Hash::make($request->password),
+            'role'     => 'user',
+        ]);
+
+        $token = $user->createToken('pgrkam-token')->plainTextToken;
+
+        return response()->json([
+            'message'      => 'Account created successfully',
+            'access_token' => $token,
+            'token_type'   => 'Bearer',
+            'user'         => $user,
+        ], 201);
+    }
+
+public function login(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Invalid email or password'], 401);
+        }
+
+        if (! $user->is_active) {
+            return response()->json(['message' => 'Your account has been deactivated. Please contact support.'], 403);
+        }
+
+        $user->update(['last_login_at' => now()]);
+
+        $user->tokens()->delete();
+
+        $token = $user->createToken('pgrkam-token')->plainTextToken;
+
+        return response()->json([
+            'message'      => 'Login successful',
+            'access_token' => $token,
+            'token_type'   => 'Bearer',
+            'user'         => $user,
+        ]);
+    }
+
+public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['message' => 'Logged out successfully']);
+    }
+}
+
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Resume;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
+
+class UserController extends Controller
+{
+    
+    public function profile(Request $request): JsonResponse
+    {
+        $user = $request->user()->load(['resume', 'counsellingRequests', 'enrolledTrainings']);
+
+        return response()->json([
+            'user'              => $user,
+            'saved_jobs_count'  => $user->savedJobs()->count(),
+            'notifications_count' => $user->notifications()->unread()->count(),
+        ]);
+    }
+
+public function updateProfile(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name'          => ['sometimes', 'string', 'max:255'],
+            'phone'         => ['sometimes', 'nullable', 'string', 'max:15'],
+            'district'      => ['sometimes', 'nullable', 'string'],
+            'qualification' => ['sometimes', 'nullable', 'string'],
+            'skills'        => ['sometimes', 'nullable', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = $request->user();
+        $user->update($validator->validated());
+
+        return response()->json(['message' => 'Profile updated', 'user' => $user]);
+    }
+
+public function notifications(Request $request): JsonResponse
+    {
+        $notifications = $request->user()
+            ->notifications()
+            ->orderByDesc('created_at')
+            ->paginate(20);
+
+        return response()->json($notifications);
+    }
+
+public function markNotificationRead(Request $request, int $id): JsonResponse
+    {
+        $notification = $request->user()->notifications()->findOrFail($id);
+        $notification->update(['is_read' => true]);
+
+        return response()->json(['message' => 'Notification marked as read']);
+    }
+
+public function savedJobs(Request $request): JsonResponse
+    {
+        $jobs = $request->user()->savedJobs()->paginate(15);
+
+        return response()->json($jobs);
+    }
+
+public function getResume(Request $request): JsonResponse
+    {
+        $resume = $request->user()->resume;
+
+        if (! $resume) {
+            return response()->json(['resume' => null]);
+        }
+
+        return response()->json(['resume' => $resume]);
+    }
+
+public function saveResume(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'personal'   => ['nullable', 'array'],
+            'education'  => ['nullable', 'array'],
+            'experience' => ['nullable', 'array'],
+            'skills'     => ['nullable', 'string'],
+            'languages'  => ['nullable', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $data   = $validator->validated();
+        $user   = $request->user();
+        $resume = Resume::updateOrCreate(
+            ['user_id' => $user->id],
+            $data
+        );
+
+        return response()->json(['message' => 'Resume saved', 'resume' => $resume]);
+    }
+
+public function counsellingSessions(Request $request): JsonResponse
+    {
+        $sessions = $request->user()
+            ->counsellingRequests()
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json(['sessions' => $sessions]);
+    }
+}
+
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Job;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
+
+class JobController extends Controller
+{
+    
+    public function index(Request $request): JsonResponse
+    {
+        $query = Job::active();
+
+        if ($request->filled('type') && in_array($request->type, ['government', 'private'])) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('location')) {
+            $query->where('location', 'LIKE', "%{$request->location}%");
+        }
+
+        if ($request->filled('search')) {
+            $q = $request->search;
+            $query->where(function ($qb) use ($q) {
+                $qb->where('title', 'LIKE', "%{$q}%")
+                   ->orWhere('department', 'LIKE', "%{$q}%");
+            });
+        }
+
+        $jobs = $query->orderByDesc('posted_on')->paginate(15);
+
+        return response()->json($jobs);
+    }
+
+public function show(int $id): JsonResponse
+    {
+        $job = Job::findOrFail($id);
+
+        return response()->json(['job' => $job]);
+    }
+
+public function store(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'title'                => ['required', 'string'],
+            'department'           => ['required', 'string'],
+            'location'             => ['required', 'string'],
+            'type'                 => ['required', 'in:government,private'],
+            'salary_range'         => ['nullable', 'string'],
+            'description'          => ['nullable', 'string'],
+            'vacancies'            => ['nullable', 'integer', 'min:1'],
+            'application_deadline' => ['required', 'date', 'after:today'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $job = Job::create([
+            ...$validator->validated(),
+            'created_by' => $request->user()->id,
+        ]);
+
+        return response()->json(['message' => 'Job created', 'job' => $job], 201);
+    }
+
+public function update(Request $request, int $id): JsonResponse
+    {
+        $job = Job::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'title'                => ['sometimes', 'string'],
+            'department'           => ['sometimes', 'string'],
+            'location'             => ['sometimes', 'string'],
+            'type'                 => ['sometimes', 'in:government,private'],
+            'salary_range'         => ['nullable', 'string'],
+            'description'          => ['nullable', 'string'],
+            'vacancies'            => ['nullable', 'integer', 'min:1'],
+            'application_deadline' => ['sometimes', 'date'],
+            'is_active'            => ['sometimes', 'boolean'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $job->update($validator->validated());
+
+        return response()->json(['message' => 'Job updated', 'job' => $job]);
+    }
+
+public function destroy(int $id): JsonResponse
+    {
+        Job::findOrFail($id)->delete();
+
+        return response()->json(['message' => 'Job deleted']);
+    }
+
+public function saveJob(Request $request, int $id): JsonResponse
+    {
+        $job  = Job::findOrFail($id);
+        $user = $request->user();
+
+        if ($user->savedJobs()->where('job_id', $id)->exists()) {
+            $user->savedJobs()->detach($id);
+            return response()->json(['message' => 'Job removed from saved list', 'saved' => false]);
+        }
+
+        $user->savedJobs()->attach($id);
+
+        return response()->json(['message' => 'Job saved', 'saved' => true]);
+    }
+
+public function applyJob(Request $request, int $id): JsonResponse
+    {
+        $job = Job::findOrFail($id);
+
+        if ($job->apply_url) {
+            return response()->json(['apply_url' => $job->apply_url]);
+        }
+
+        return response()->json(['message' => 'Application submitted successfully']);
+    }
+}
+
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Training;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+
+class TrainingController extends Controller
+{
+    
+    public function index(Request $request): JsonResponse
+    {
+        $query = Training::where('is_active', true);
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('title', 'LIKE', "%{$request->search}%");
+        }
+
+        return response()->json($query->orderBy('title')->paginate(15));
+    }
+
+public function show(int $id): JsonResponse
+    {
+        $training = Training::findOrFail($id);
+
+        return response()->json([
+            'training'        => $training,
+            'available_seats' => $training->available_seats,
+            'is_full'         => $training->is_full,
+        ]);
+    }
+
+public function enroll(Request $request, int $id): JsonResponse
+    {
+        $training = Training::findOrFail($id);
+        $user     = $request->user();
+
+        if ($user->enrolledTrainings()->where('training_id', $id)->exists()) {
+            return response()->json(['message' => 'Already enrolled in this training'], 409);
+        }
+
+        if ($training->is_full) {
+            return response()->json(['message' => 'No seats available'], 409);
+        }
+
+        DB::transaction(function () use ($user, $training, $id) {
+            $user->enrolledTrainings()->attach($id, ['status' => 'enrolled']);
+            $training->increment('enrolled_count');
+        });
+
+        return response()->json(['message' => 'Successfully enrolled in training']);
+    }
+}
+
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Service;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
+
+class ServiceController extends Controller
+{
+    
+    public function index(): JsonResponse
+    {
+        $services = Service::active()->get();
+
+        return response()->json(['services' => $services]);
+    }
+
+public function show(int $id): JsonResponse
+    {
+        $service = Service::findOrFail($id);
+
+        return response()->json(['service' => $service]);
+    }
+
+public function store(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'title'       => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'icon'        => ['nullable', 'string'],
+            'color'       => ['nullable', 'string'],
+            'path'        => ['nullable', 'string'],
+            'sort_order'  => ['nullable', 'integer'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $service = Service::create($validator->validated());
+
+        return response()->json(['message' => 'Service created', 'service' => $service], 201);
+    }
+
+public function update(Request $request, int $id): JsonResponse
+    {
+        $service = Service::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'title'       => ['sometimes', 'string'],
+            'description' => ['nullable', 'string'],
+            'icon'        => ['nullable', 'string'],
+            'color'       => ['nullable', 'string'],
+            'is_active'   => ['sometimes', 'boolean'],
+            'sort_order'  => ['nullable', 'integer'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $service->update($validator->validated());
+
+        return response()->json(['message' => 'Service updated', 'service' => $service]);
+    }
+
+public function destroy(int $id): JsonResponse
+    {
+        Service::findOrFail($id)->delete();
+
+        return response()->json(['message' => 'Service deleted']);
+    }
+}
+
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+class ChatGuideController extends Controller
+{
+    
+    private const MODULES = [
+        [
+            'keywords'    => ['job', 'jobs', 'employment', 'work', 'vacancy', 'sarkari', 'govt', 'government', 'naukri'],
+            'module'      => 'Government Jobs',
+            'path'        => '/jobs',
+            'icon'        => '🏛️',
+            'color'       => 'blue',
+            'description' => 'Browse government and public sector job openings.',
+        ],
+        [
+            'keywords'    => ['private', 'company', 'corporate', 'mnc', 'startup', 'industry', 'sector'],
+            'module'      => 'Private Jobs',
+            'path'        => '/jobs?type=private',
+            'icon'        => '🏢',
+            'color'       => 'indigo',
+            'description' => 'Explore private sector and corporate job opportunities.',
+        ],
+        [
+            'keywords'    => ['skill', 'training', 'course', 'learn', 'certificate', 'trade', 'vocational', 'itc', 'iti'],
+            'module'      => 'Skill Training',
+            'path'        => '/training',
+            'icon'        => '🎓',
+            'color'       => 'green',
+            'description' => 'Enroll in government-sponsored skill development programs.',
+        ],
+        [
+            'keywords'    => ['resume', 'cv', 'biodata', 'profile', 'portfolio'],
+            'module'      => 'Resume Builder',
+            'path'        => '/resume',
+            'icon'        => '📄',
+            'color'       => 'orange',
+            'description' => 'Create and manage your professional resume.',
+        ],
+        [
+            'keywords'    => ['career', 'counsel', 'counselling', 'guide', 'advice', 'mentor', 'direction'],
+            'module'      => 'Career Counselling',
+            'path'        => '/counselling',
+            'icon'        => '💬',
+            'color'       => 'purple',
+            'description' => 'Get personalised career guidance from certified experts.',
+        ],
+    ];
+
+public function handle(Request $request): JsonResponse
+    {
+        $request->validate(['message' => ['required', 'string', 'max:500']]);
+
+        $message     = strtolower($request->message);
+        $suggestions = [];
+
+        foreach (self::MODULES as $mod) {
+            foreach ($mod['keywords'] as $kw) {
+                if (str_contains($message, $kw)) {
+                    if (! collect($suggestions)->contains('path', $mod['path'])) {
+                        $suggestions[] = [
+                            'module'      => $mod['module'],
+                            'path'        => $mod['path'],
+                            'icon'        => $mod['icon'],
+                            'color'       => $mod['color'],
+                            'description' => $mod['description'],
+                        ];
+                    }
+                    break;
+                }
+            }
+        }
+
+        $reply = count($suggestions) > 0
+            ? 'Based on your query, here are the relevant services:'
+            : "I couldn't find a direct match. Try keywords like \"job\", \"training\", \"resume\", or \"career counselling\".";
+
+        return response()->json([
+            'reply'       => $reply,
+            'suggestions' => $suggestions,
+        ]);
+    }
+}
+
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\CounsellingRequest;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
+
+class CounsellingController extends Controller
+{
+    
+    public function book(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'counsellor_id'  => ['required', 'integer'],
+            'preferred_date' => ['required', 'date', 'after_or_equal:today'],
+            'time_slot'      => ['required', 'string'],
+            'topic'          => ['required', 'string', 'max:255'],
+            'notes'          => ['nullable', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $counsellorNames = [
+            1 => 'Dr. Rajinder Kaur',
+            2 => 'Mr. Amandeep Singh',
+            3 => 'Ms. Priya Sharma',
+        ];
+
+        $counsellorName = $counsellorNames[$request->counsellor_id] ?? 'PGRKAM Counsellor';
+
+        $session = CounsellingRequest::create([
+            'user_id'        => $request->user()->id,
+            'counsellor_name'=> $counsellorName,
+            'preferred_date' => $request->preferred_date,
+            'time_slot'      => $request->time_slot,
+            'topic'          => $request->topic,
+            'notes'          => $request->notes,
+            'status'         => 'confirmed',
+        ]);
+
+        return response()->json([
+            'message' => 'Counselling session booked successfully',
+            'session' => $session,
+        ], 201);
+    }
+
+public function show(Request $request, int $id): JsonResponse
+    {
+        $session = CounsellingRequest::where('user_id', $request->user()->id)
+                    ->findOrFail($id);
+
+        return response()->json(['session' => $session]);
+    }
+
+public function cancel(Request $request, int $id): JsonResponse
+    {
+        $session = CounsellingRequest::where('user_id', $request->user()->id)
+                    ->findOrFail($id);
+
+        $session->update(['status' => 'cancelled']);
+
+        return response()->json(['message' => 'Session cancelled']);
+    }
+}
+
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\Job;
+use App\Models\Training;
+use App\Models\CounsellingRequest;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
+
+class AdminController extends Controller
+{
+    
+    public function dashboard(): JsonResponse
+    {
+        return response()->json([
+            'stats' => [
+                'total_users'        => User::count(),
+                'active_jobs'        => Job::where('is_active', true)->count(),
+                'training_programs'  => Training::where('is_active', true)->count(),
+                'counselling_reqs'   => CounsellingRequest::count(),
+                'government_jobs'    => Job::where('type', 'government')->count(),
+                'private_jobs'       => Job::where('type', 'private')->count(),
+                'pending_counselling'=> CounsellingRequest::where('status', 'pending')->count(),
+            ],
+        ]);
+    }
+
+public function users(Request $request): JsonResponse
+    {
+        $query = User::query();
+
+        if ($request->filled('search')) {
+            $q = $request->search;
+            $query->where(function ($qb) use ($q) {
+                $qb->where('name', 'LIKE', "%{$q}%")
+                   ->orWhere('email', 'LIKE', "%{$q}%");
+            });
+        }
+
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        return response()->json($query->orderByDesc('created_at')->paginate(20));
+    }
+
+public function deleteUser(Request $request, int $id): JsonResponse
+    {
+        if ($request->user()->id === $id) {
+            return response()->json(['message' => 'Cannot delete your own account'], 403);
+        }
+
+        User::findOrFail($id)->delete();
+
+        return response()->json(['message' => 'User deleted']);
+    }
+
+public function reports(): JsonResponse
+    {
+        return response()->json([
+            'registrations_by_month' => User::selectRaw('MONTH(created_at) as month, COUNT(*) as count')
+                ->whereYear('created_at', date('Y'))
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get(),
+
+            'jobs_by_type' => Job::selectRaw('type, COUNT(*) as count')
+                ->groupBy('type')
+                ->get(),
+
+            'training_enrollments' => Training::withCount('enrolledUsers')
+                ->orderByDesc('enrolled_users_count')
+                ->limit(5)
+                ->get(),
+
+            'counselling_by_status' => CounsellingRequest::selectRaw('status, COUNT(*) as count')
+                ->groupBy('status')
+                ->get(),
+        ]);
+    }
+
+public function schemes(): JsonResponse
+    {
+        return response()->json([
+            'schemes' => [
+                ['id' => 1, 'title' => 'Ghar Ghar Rozgar',     'type' => 'State',   'beneficiaries' => 12500],
+                ['id' => 2, 'title' => 'PM Kaushal Vikas',      'type' => 'Central', 'beneficiaries' => 8400],
+                ['id' => 3, 'title' => 'Startup Punjab',        'type' => 'State',   'beneficiaries' => 3200],
+                ['id' => 4, 'title' => 'Apprenticeship Scheme', 'type' => 'Central', 'beneficiaries' => 5600],
+            ],
+        ]);
+    }
+
+public function addScheme(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'title'   => ['required', 'string'],
+            'type'    => ['required', 'in:State,Central'],
+            'details' => ['nullable', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        return response()->json(['message' => 'Scheme added successfully'], 201);
+    }
+}
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('phone', 15)->nullable()->after('email');
+            $table->enum('role', ['user', 'admin'])->default('user')->after('phone');
+            $table->string('district')->nullable()->after('role');
+            $table->string('qualification')->nullable();
+            $table->string('skills')->nullable();
+            $table->string('profile_photo')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamp('last_login_at')->nullable();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn([
+                'phone', 'role', 'district', 'qualification',
+                'skills', 'profile_photo', 'is_active', 'last_login_at',
+            ]);
+        });
+    }
+};
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('services', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->string('icon')->default('📋');
+            $table->string('color')->default('blue');
+            $table->string('path')->nullable();
+            $table->string('url')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->integer('sort_order')->default(0);
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('services');
+    }
+};
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('job_listings', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->string('department');
+            $table->string('location');
+            $table->enum('type', ['government', 'private'])->default('government');
+            $table->string('salary_range')->nullable();
+            $table->text('description')->nullable();
+            $table->json('qualifications')->nullable();
+            $table->integer('vacancies')->default(1);
+            $table->date('application_deadline');
+            $table->date('posted_on')->useCurrent();
+            $table->string('apply_url')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('job_listings');
+    }
+};
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('trainings', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->string('provider');
+            $table->string('category');
+            $table->string('duration');
+            $table->integer('total_seats')->default(30);
+            $table->integer('enrolled_count')->default(0);
+            $table->string('fee')->default('Free');
+            $table->text('description')->nullable();
+            $table->json('syllabus')->nullable();
+            $table->string('certificate_type')->nullable();
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('training_user', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('training_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->enum('status', ['enrolled', 'completed', 'dropped'])->default('enrolled');
+            $table->timestamp('enrolled_at')->useCurrent();
+            $table->unique(['training_id', 'user_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('training_user');
+        Schema::dropIfExists('trainings');
+    }
+};
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('counselling_requests', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('counsellor_name');
+            $table->date('preferred_date');
+            $table->string('time_slot');
+            $table->string('topic');
+            $table->text('notes')->nullable();
+            $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled'])
+                  ->default('pending');
+            $table->text('counsellor_feedback')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('counselling_requests');
+    }
+};
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('resumes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
+            $table->json('personal')->nullable();
+            $table->json('education')->nullable();
+            $table->json('experience')->nullable();
+            $table->text('skills')->nullable();
+            $table->string('languages')->nullable();
+            $table->integer('score')->nullable();
+            $table->string('pdf_path')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('resumes');
+    }
+};
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('title');
+            $table->text('message');
+            $table->string('type')->default('info');
+            $table->string('link')->nullable();
+            $table->boolean('is_read')->default(false);
+            $table->timestamps();
+        });
+
+        Schema::create('saved_jobs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('job_id')->constrained('job_listings')->cascadeOnDelete();
+            $table->timestamp('saved_at')->useCurrent();
+            $table->unique(['user_id', 'job_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('saved_jobs');
+        Schema::dropIfExists('notifications');
+    }
+};
+
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use App\Models\Job;
+use App\Models\Training;
+use App\Models\Service;
+
+class DatabaseSeeder extends Seeder
+{
+    public function run(): void
+    {
+        User::firstOrCreate(['email' => 'admin@pgrkam.gov.in'], [
+            'name'       => 'PGRKAM Admin',
+            'phone'      => '0172-2664001',
+            'password'   => Hash::make('password'),
+            'role'       => 'admin',
+            'district'   => 'Chandigarh',
+            'is_active'  => true,
+        ]);
+
+        User::firstOrCreate(['email' => 'user@pgrkam.gov.in'], [
+            'name'       => 'Harpreet Singh',
+            'phone'      => '98765 43210',
+            'password'   => Hash::make('password'),
+            'role'       => 'user',
+            'district'   => 'Ludhiana',
+            'is_active'  => true,
+        ]);
+
+        $services = [
+            ['title' => 'Government Jobs',    'icon' => '🏛️', 'color' => 'blue',   'path' => '/jobs',               'sort_order' => 1],
+            ['title' => 'Private Jobs',       'icon' => '🏢', 'color' => 'indigo', 'path' => '/jobs?type=private',  'sort_order' => 2],
+            ['title' => 'Skill Training',     'icon' => '🎓', 'color' => 'green',  'path' => '/training',           'sort_order' => 3],
+            ['title' => 'Resume Builder',     'icon' => '📄', 'color' => 'orange', 'path' => '/resume',             'sort_order' => 4],
+            ['title' => 'Career Counselling', 'icon' => '💬', 'color' => 'purple', 'path' => '/counselling',        'sort_order' => 5],
+            ['title' => 'Employment Schemes', 'icon' => '📋', 'color' => 'red',    'path' => '/services',           'sort_order' => 6],
+        ];
+
+        foreach ($services as $s) {
+            Service::firstOrCreate(['title' => $s['title']], array_merge($s, ['is_active' => true]));
+        }
+
+        $jobs = [
+            ['title' => 'Junior Clerk',          'department' => 'Revenue Dept.',        'location' => 'Chandigarh', 'type' => 'government', 'salary_range' => '₹25,000 – ₹35,000', 'application_deadline' => '2026-06-30'],
+            ['title' => 'Software Developer',    'department' => 'Punjab IT Department',  'location' => 'Mohali',     'type' => 'government', 'salary_range' => '₹45,000 – ₹65,000', 'application_deadline' => '2026-07-15'],
+            ['title' => 'Data Entry Operator',   'department' => 'Health Dept.',          'location' => 'Ludhiana',   'type' => 'government', 'salary_range' => '₹18,000 – ₹22,000', 'application_deadline' => '2026-06-20'],
+            ['title' => 'Frontend Engineer',     'department' => 'TechCorp Pvt. Ltd.',    'location' => 'Mohali',     'type' => 'private',    'salary_range' => '₹40,000 – ₹70,000', 'application_deadline' => '2026-06-25'],
+            ['title' => 'Customer Support Exec.','department' => 'BPO Solutions Ltd.',    'location' => 'Amritsar',   'type' => 'private',    'salary_range' => '₹15,000 – ₹25,000', 'application_deadline' => '2026-06-18'],
+            ['title' => 'Electrician',           'department' => 'PSPCL',                 'location' => 'Patiala',    'type' => 'government', 'salary_range' => '₹20,000 – ₹30,000', 'application_deadline' => '2026-07-01'],
+        ];
+
+        foreach ($jobs as $j) {
+            Job::firstOrCreate(['title' => $j['title'], 'department' => $j['department']], array_merge($j, ['is_active' => true]));
+        }
+
+        $trainings = [
+            ['title' => 'Web Development Bootcamp',    'provider' => 'Punjab Skill Mission',  'category' => 'IT',           'duration' => '3 months', 'total_seats' => 30, 'fee' => 'Free'],
+            ['title' => 'Electrician Trade Course',    'provider' => 'ITI Ludhiana',          'category' => 'Electrical',   'duration' => '6 months', 'total_seats' => 25, 'fee' => 'Free'],
+            ['title' => 'Digital Marketing',           'provider' => 'CDAC Mohali',           'category' => 'Marketing',    'duration' => '2 months', 'total_seats' => 40, 'fee' => '₹500'],
+            ['title' => 'Tailoring & Garment Making',  'provider' => 'Women Empowerment ITI', 'category' => 'Handcraft',    'duration' => '4 months', 'total_seats' => 20, 'fee' => 'Free'],
+            ['title' => 'Spoken English & Soft Skills','provider' => 'PGRKAM Centre',         'category' => 'Communication','duration' => '1 month',  'total_seats' => 50, 'fee' => 'Free'],
+        ];
+
+        foreach ($trainings as $t) {
+            Training::firstOrCreate(['title' => $t['title']], array_merge($t, ['is_active' => true]));
+        }
+
+        $this->command->info('✅ PGRKAM database seeded successfully!');
+        $this->command->info('   Admin: admin@pgrkam.gov.in / password');
+        $this->command->info('   User:  user@pgrkam.gov.in  / password');
+    }
+}
+

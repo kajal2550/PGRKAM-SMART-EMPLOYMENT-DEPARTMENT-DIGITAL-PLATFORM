@@ -1,21 +1,28 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useSidebar } from '../context/SidebarContext'
 import {
   FiHome, FiBriefcase, FiBookOpen, FiFileText,
   FiMessageSquare, FiUser, FiBell, FiLogOut,
   FiSettings, FiPieChart, FiUsers, FiLayers,
+  FiBookmark, FiAlertCircle,
 } from 'react-icons/fi'
-import { MdWork } from 'react-icons/md'
+import { MdWork, MdSchool } from 'react-icons/md'
 
 // Navigation items for regular users
 const userNav = [
-  { label: 'Dashboard',   to: '/dashboard',   icon: FiHome        },
-  { label: 'Jobs',        to: '/jobs',        icon: FiBriefcase   },
-  { label: 'Training',    to: '/training',    icon: FiBookOpen    },
-  { label: 'Resume',      to: '/resume',      icon: FiFileText    },
-  { label: 'Counselling', to: '/counselling', icon: FiMessageSquare },
-  { label: 'Profile',     to: '/dashboard',   icon: FiUser        },
-  { label: 'Notifications', to: '/dashboard', icon: FiBell        },
+  { label: 'Dashboard',          to: '/dashboard',       icon: FiHome          },
+  { label: 'Jobs',               to: '/jobs',            icon: FiBriefcase     },
+  { label: 'My Applications',    to: '/my-applications', icon: MdWork          },
+  { label: 'Saved Jobs',         to: '/saved-jobs',      icon: FiBookmark      },
+  { label: 'Training',           to: '/training',        icon: FiBookOpen      },
+  { label: 'My Enrollments',     to: '/my-enrollments',  icon: MdSchool        },
+  { label: 'Employment Schemes', to: '/schemes',         icon: FiLayers        },
+  { label: 'Resume',             to: '/resume',          icon: FiFileText      },
+  { label: 'Career Counselling', to: '/counselling',     icon: FiMessageSquare },
+  { label: 'Job Alerts',         to: '/job-alerts',      icon: FiAlertCircle   },
+  { label: 'Notifications',      to: '/notifications',   icon: FiBell          },
+  { label: 'Profile & Settings', to: '/profile',         icon: FiUser          },
 ]
 
 // Navigation items for admin users
@@ -30,6 +37,7 @@ const adminNav = [
 
 export default function Sidebar({ isOpen }) {
   const { user, logout, isAdmin } = useAuth()
+  const { closeSidebar } = useSidebar()
   const navigate  = useNavigate()
   const navItems  = isAdmin ? adminNav : userNav
 
@@ -40,19 +48,14 @@ export default function Sidebar({ isOpen }) {
 
   return (
     <>
-      {/* Backdrop on mobile */}
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden" />
-      )}
-
       {/* Sidebar panel */}
       <aside
-        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] z-40 flex flex-col
-                    bg-white border-r border-gray-200 shadow-lg transition-all duration-300
-                    ${isOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full lg:translate-x-0 lg:w-16'}`}
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] z-40 flex flex-col w-64
+                    bg-white border-r border-gray-200 shadow-lg transition-transform duration-300
+                    ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {/* User info */}
-        <div className={`p-4 border-b border-gray-100 ${!isOpen && 'lg:hidden'}`}>
+          <div className="p-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-600 to-blue-400
                             flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
@@ -73,12 +76,13 @@ export default function Sidebar({ isOpen }) {
             <NavLink
               key={label}
               to={to}
+              onClick={closeSidebar}
               className={({ isActive }) =>
                 `nav-item ${isActive ? 'nav-item-active' : ''}`
               }
             >
               <Icon size={18} className="flex-shrink-0" />
-              <span className={`truncate ${!isOpen && 'lg:hidden'}`}>{label}</span>
+              <span className="truncate">{label}</span>
             </NavLink>
           ))}
         </nav>
@@ -90,7 +94,7 @@ export default function Sidebar({ isOpen }) {
             className="nav-item w-full text-red-500 hover:bg-red-50 hover:text-red-600"
           >
             <FiLogOut size={18} className="flex-shrink-0" />
-            <span className={`truncate ${!isOpen && 'lg:hidden'}`}>Logout</span>
+            <span className="truncate">Logout</span>
           </button>
         </div>
       </aside>

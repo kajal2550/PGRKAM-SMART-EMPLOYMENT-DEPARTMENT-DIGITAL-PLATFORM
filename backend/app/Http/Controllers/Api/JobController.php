@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Job;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class JobController extends Controller
@@ -34,7 +35,7 @@ class JobController extends Controller
             });
         }
 
-        $jobs = $query->orderByDesc('posted_on')->paginate(15);
+        $jobs = $query->orderByDesc('posted_on')->get();
 
         return response()->json($jobs);
     }
@@ -130,6 +131,16 @@ class JobController extends Controller
 
         $user->savedJobs()->attach($id);
 
+        // Notification
+        \App\Models\Notification::create([
+            'user_id' => $user->id,
+            'title'   => 'Job Saved',
+            'message' => '"' . $job->title . '" has been saved to your list. Apply before the deadline!',
+            'type'    => 'job',
+            'link'    => '/saved-jobs',
+            'is_read' => false,
+        ]);
+
         return response()->json(['message' => 'Job saved', 'saved' => true]);
     }
 
@@ -138,14 +149,52 @@ class JobController extends Controller
      */
     public function applyJob(Request $request, int $id): JsonResponse
     {
-        $job = Job::findOrFail($id);
+        $job  = Job::findOrFail($id);
+        $user = $request->user();
 
-        // In a real system this would create a job_applications record.
-        // For now we return the apply URL or a success response.
-        if ($job->apply_url) {
-            return response()->json(['apply_url' => $job->apply_url]);
+        if (DB::table('job_applications')->where('user_id', $user->id)->where('job_id', $id)->exists()) {
+            return response()->json(['message' => 'Already applied to this job'], 409);
         }
 
-        return response()->json(['message' => 'Application submitted successfully']);
+        $validated = $request->validate([
+            'applicant_name' => 'required|string|max:100',
+            'phone'          => 'required|string|max:20',
+            'experience'     => 'required|string|max:50',
+            'qualification'  => 'required|string|max:100',
+            'cover_letter'   => 'nullable|string|max:2000',
+        ]);
+
+        // Generate unique application reference: PGRKAM-YYYY-XXXXXXXX
+        $ref = 'PGRKAM-' . date('Y') . '-' . strtoupper(substr(md5(uniqid($user->id . $id, true)), 0, 8));
+
+        DB::table('job_applications')->insert([
+            'application_ref' => $ref,
+            'user_id'         => $user->id,
+            'job_id'          => $id,
+            'applicant_name'  => $validated['applicant_name'],
+            'applicant_email' => $user->email,
+            'phone'           => $validated['phone'],
+            'experience'      => $validated['experience'],
+            'qualification'   => $validated['qualification'],
+            'cover_letter'    => $validated['cover_letter'] ?? null,
+            'status'          => 'pending',
+            'created_at'      => now(),
+            'updated_at'      => now(),
+        ]);
+
+        // Create notification
+        \App\Models\Notification::create([
+            'user_id' => $user->id,
+            'title'   => 'Application Submitted',
+            'message' => 'Your application for "' . $job->title . '" has been received. Reference: ' . $ref,
+            'type'    => 'job',
+            'link'    => '/my-applications',
+            'is_read' => false,
+        ]);
+
+        return response()->json([
+            'message'         => 'Application submitted successfully!',
+            'application_ref' => $ref,
+        ]);
     }
 }

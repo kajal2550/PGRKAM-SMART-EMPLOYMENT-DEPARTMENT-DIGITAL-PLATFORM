@@ -1,23 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FiArrowRight, FiSearch, FiCheckCircle } from 'react-icons/fi'
 import ServiceCard from '../components/ServiceCard'
 import SuggestionCard from '../components/SuggestionCard'
 import { dummyServices, analyseQuery, GUIDANCE_KEYWORDS } from '../utils/helpers'
-
-// Hero stats
-const stats = [
-  { value: '50,000+', label: 'Jobs Listed'        },
-  { value: '1,200+',  label: 'Training Programs'  },
-  { value: '3 Lakh+', label: 'Registered Users'   },
-  { value: '95%',     label: 'Placement Success'  },
-]
+import { statsAPI } from '../api/axios'
 
 export default function Home() {
   const navigate = useNavigate()
   const [query,       setQuery]       = useState('')
   const [suggestions, setSuggestions] = useState([])
   const [searched,    setSearched]    = useState(false)
+  const [stats,       setStats]       = useState(null)
+
+  useEffect(() => {
+    statsAPI.get().then(({ data }) => setStats(data)).catch(() => {})
+  }, [])
+
+  const liveStats = [
+    { value: stats ? `${stats.jobs}+`      : '…', label: 'Active Job Listings'   },
+    { value: stats ? `${stats.trainings}+` : '…', label: 'Training Programs'     },
+    { value: stats ? `${stats.users}+`     : '…', label: 'Registered Users'      },
+    { value: stats ? `${stats.districts}`  : '22', label: 'Districts Covered'    },
+  ]
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -92,7 +97,7 @@ export default function Home() {
             <Link to="/register" className="btn-primary bg-white text-primary-700 hover:bg-blue-50">
               Get Started <FiArrowRight size={16} />
             </Link>
-            <Link to="/services" className="btn-secondary border-white/30 text-white hover:bg-white/10">
+            <Link to="/services" className="font-semibold px-6 py-2.5 rounded-xl bg-white text-primary-700 hover:bg-blue-50 transition-all duration-200 shadow-sm active:scale-95">
               Browse Services
             </Link>
           </div>
@@ -102,7 +107,7 @@ export default function Home() {
       {/* ── Stats Strip ────────────────────────────────────────────────────── */}
       <section className="bg-primary-800">
         <div className="max-w-screen-xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {stats.map(({ value, label }) => (
+          {liveStats.map(({ value, label }) => (
             <div key={label}>
               <p className="text-3xl font-extrabold text-white">{value}</p>
               <p className="text-sm text-primary-200 mt-1">{label}</p>

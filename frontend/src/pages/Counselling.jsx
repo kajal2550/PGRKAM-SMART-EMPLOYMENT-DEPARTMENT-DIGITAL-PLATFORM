@@ -1,31 +1,76 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { FiMessageSquare, FiCalendar, FiClock, FiCheckCircle } from 'react-icons/fi'
+import { userAPI } from '../api/axios'
+import api from '../api/axios'
+import { FiMessageSquare, FiCalendar, FiClock, FiCheckCircle, FiTrash2 } from 'react-icons/fi'
+import { formatDate } from '../utils/helpers'
 import toast from 'react-hot-toast'
 
 const slots = ['10:00 AM', '11:00 AM', '12:00 PM', '2:00 PM', '3:00 PM', '4:00 PM']
 const counsellors = [
   { id: 1, name: 'Dr. Rajinder Kaur',  expertise: 'Career Planning & IT',          rating: 4.9, sessions: 320 },
-  { id: 2, name: 'Mr. Amandeep Singh', expertise: 'Government Jobs & Upsc Prep',   rating: 4.7, sessions: 210 },
+  { id: 2, name: 'Mr. Amandeep Singh', expertise: 'Government Jobs & UPSC Prep',   rating: 4.7, sessions: 210 },
   { id: 3, name: 'Ms. Priya Sharma',   expertise: 'Skill Development & Placement', rating: 4.8, sessions: 180 },
 ]
 
 export default function Counselling() {
-  const { user } = useAuth()
-  const [form, setForm] = useState({ counsellor_id: '', date: '', slot: '', topic: '', notes: '' })
-  const [submitted, setSubmitted] = useState(false)
-  const [myRequests] = useState([
-    { id: 1, counsellor: 'Dr. Rajinder Kaur', date: '2026-05-28', slot: '11:00 AM', topic: 'IT Career', status: 'confirmed' },
-  ])
+  const { user }   = useAuth()
+  const navigate   = useNavigate()
+  const [form, setForm]           = useState({ counsellor_id: '', date: '', slot: '', topic: '', notes: '' })
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted,  setSubmitted]  = useState(false)
+  const [sessions,   setSessions]   = useState([])
+  const [loadingSessions, setLoadingSessions] = useState(true)
 
-  const handleSubmit = (e) => {
+  const fetchSessions = async () => {
+    if (!user) return
+    try {
+      const { data } = await userAPI.getCounselling()
+      setSessions(data.sessions || [])
+    } catch {
+      // silently ignore
+    } finally {
+      setLoadingSessions(false)
+    }
+  }
+
+  useEffect(() => { fetchSessions() }, [user])
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!user) { toast.error('Please login to book a session'); navigate('/login'); return }
     if (!form.counsellor_id || !form.date || !form.slot || !form.topic) {
       toast.error('Please fill all required fields')
       return
     }
-    setSubmitted(true)
-    toast.success('Counselling session booked successfully!')
+    setSubmitting(true)
+    try {
+      await userAPI.bookCounselling({
+        counsellor_id:  parseInt(form.counsellor_id),
+        preferred_date: form.date,
+        time_slot:      form.slot,
+        topic:          form.topic,
+        notes:          form.notes,
+      })
+      setSubmitted(true)
+      toast.success('Counselling session booked successfully! 🎉')
+      fetchSessions()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Booking failed. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleCancel = async (sessionId) => {
+    try {
+      await api.delete(`/counselling/${sessionId}`)
+      setSessions((p) => p.map((s) => s.id === sessionId ? { ...s, status: 'cancelled' } : s))
+      toast.success('Session cancelled')
+    } catch {
+      toast.error('Could not cancel session')
+    }
   }
 
   return (
@@ -61,14 +106,14 @@ export default function Counselling() {
                 <span>💬 {c.sessions} sessions</span>
               </div>
               {form.counsellor_id === String(c.id) && (
-                <p className="text-center text-xs text-primary-600 font-medium mt-2">Selected</p>
+                <p className="text-center text-xs text-primary-600 font-medium mt-2">✓ Selected</p>
               )}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Booking Form */}
+      {/* Booking Form / Success */}
       {!submitted ? (
         <div className="glass-card p-6">
           <h2 className="font-bold text-gray-900 mb-5">Book a Session</h2>
@@ -118,8 +163,15 @@ export default function Counselling() {
                 placeholder="Any specific questions or background information…"
                 className="input-field text-sm resize-none" />
             </div>
-            <button type="submit" className="btn-primary flex items-center gap-2">
-              <FiMessageSquare size={15} /> Book Session
+            <button type="submit" disabled={submitting} className="btn-primary flex items-center gap-2">
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Booking…
+                </>
+              ) : (
+                <><FiMessageSquare size={15} /> Book Session</>
+              )}
             </button>
           </form>
         </div>
@@ -130,31 +182,48 @@ export default function Counselling() {
           <p className="text-gray-500 text-sm">
             Your session has been confirmed. You'll receive a reminder 30 minutes before.
           </p>
-          <button onClick={() => setSubmitted(false)} className="btn-secondary mt-6 text-sm">
+          <button onClick={() => { setSubmitted(false); setForm({ counsellor_id: '', date: '', slot: '', topic: '', notes: '' }) }}
+            className="btn-secondary mt-6 text-sm">
             Book Another
           </button>
         </div>
       )}
 
-      {/* My Requests */}
+      {/* My Sessions */}
       <div className="glass-card p-6">
         <h2 className="font-bold text-gray-900 mb-4">My Booked Sessions</h2>
-        {myRequests.length === 0 ? (
+        {loadingSessions ? (
+          <div className="flex justify-center py-8">
+            <div className="w-6 h-6 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+          </div>
+        ) : sessions.length === 0 ? (
           <p className="text-gray-400 text-sm">No sessions booked yet.</p>
         ) : (
           <div className="space-y-3">
-            {myRequests.map((r) => (
+            {sessions.map((r) => (
               <div key={r.id} className="flex items-center gap-4 p-3 rounded-xl bg-gray-50">
-                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
                   <FiMessageSquare className="text-primary-600" size={18} />
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-800 text-sm">{r.counsellor}</p>
-                  <p className="text-xs text-gray-500">{r.topic} · {r.date} · {r.slot}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-800 text-sm">{r.counsellor_name}</p>
+                  <p className="text-xs text-gray-500">{r.topic} · {formatDate(r.preferred_date)} · {r.time_slot}</p>
                 </div>
-                <span className={`badge ${r.status === 'confirmed' ? 'badge-green' : 'badge-yellow'}`}>
+                <span className={`badge flex-shrink-0 ${
+                  r.status === 'confirmed'  ? 'badge-green'  :
+                  r.status === 'cancelled'  ? 'badge-red'    : 'badge-yellow'
+                }`}>
                   {r.status}
                 </span>
+                {r.status !== 'cancelled' && (
+                  <button
+                    onClick={() => handleCancel(r.id)}
+                    className="p-1.5 text-gray-400 hover:text-red-500 transition rounded"
+                    title="Cancel session"
+                  >
+                    <FiTrash2 size={14} />
+                  </button>
+                )}
               </div>
             ))}
           </div>

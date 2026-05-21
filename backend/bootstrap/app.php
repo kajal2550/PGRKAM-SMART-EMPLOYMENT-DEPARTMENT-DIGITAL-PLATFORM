@@ -12,9 +12,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Sanctum CSRF cookie middleware for web routes (SPA usage)
-        $middleware->statefulApi();
-
         // Register custom role middleware alias
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,

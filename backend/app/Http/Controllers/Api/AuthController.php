@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -40,6 +41,16 @@ class AuthController extends Controller
         ]);
 
         $token = $user->createToken('pgrkam-token')->plainTextToken;
+
+        // Welcome notification
+        Notification::create([
+            'user_id' => $user->id,
+            'title'   => 'Welcome to PGRKAM!',
+            'message' => 'Your account has been created successfully. Start exploring government and private job opportunities across Punjab.',
+            'type'    => 'info',
+            'link'    => '/dashboard',
+            'is_read' => false,
+        ]);
 
         return response()->json([
             'message'      => 'Account created successfully',

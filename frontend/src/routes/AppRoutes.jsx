@@ -6,20 +6,27 @@ import DashboardLayout from '../layouts/DashboardLayout'
 import { ProtectedRoute, AdminRoute, GuestRoute } from './ProtectedRoute'
 
 // ── Lazy-load pages for code splitting ────────────────────────────────────────
-const Home           = lazy(() => import('../pages/Home'))
-const About          = lazy(() => import('../pages/About'))
-const Services       = lazy(() => import('../pages/Services'))
-const Contact        = lazy(() => import('../pages/Contact'))
-const Login          = lazy(() => import('../pages/Login'))
-const Register       = lazy(() => import('../pages/Register'))
-const Dashboard      = lazy(() => import('../pages/Dashboard'))
-const Jobs           = lazy(() => import('../pages/Jobs'))
-const Training       = lazy(() => import('../pages/Training'))
-const Resume         = lazy(() => import('../pages/Resume'))
-const Counselling    = lazy(() => import('../pages/Counselling'))
-const AdminDashboard = lazy(() => import('../pages/AdminDashboard'))
-const Reports        = lazy(() => import('../pages/Reports'))
-const NotFound       = lazy(() => import('../pages/NotFound'))
+const Home             = lazy(() => import('../pages/Home'))
+const About            = lazy(() => import('../pages/About'))
+const Services         = lazy(() => import('../pages/Services'))
+const Contact          = lazy(() => import('../pages/Contact'))
+const Login            = lazy(() => import('../pages/Login'))
+const Register         = lazy(() => import('../pages/Register'))
+const Dashboard        = lazy(() => import('../pages/Dashboard'))
+const Jobs             = lazy(() => import('../pages/Jobs'))
+const Training         = lazy(() => import('../pages/Training'))
+const Resume           = lazy(() => import('../pages/Resume'))
+const Counselling      = lazy(() => import('../pages/Counselling'))
+const MyApplications   = lazy(() => import('../pages/MyApplications'))
+const SavedJobs        = lazy(() => import('../pages/SavedJobs'))
+const Notifications    = lazy(() => import('../pages/Notifications'))
+const ProfileSettings  = lazy(() => import('../pages/ProfileSettings'))
+const Schemes          = lazy(() => import('../pages/Schemes'))
+const MyEnrollments    = lazy(() => import('../pages/MyEnrollments'))
+const JobAlerts        = lazy(() => import('../pages/JobAlerts'))
+const AdminDashboard   = lazy(() => import('../pages/AdminDashboard'))
+const Reports          = lazy(() => import('../pages/Reports'))
+const NotFound         = lazy(() => import('../pages/NotFound'))
 
 const fallback = <Loader fullPage text="Loading page…" />
 
@@ -47,9 +54,16 @@ export default function AppRoutes() {
         {/* ── Authenticated user routes (with Sidebar) ────────────────────── */}
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
-            <Route path="dashboard"  element={<Dashboard />}   />
-            <Route path="resume"     element={<Resume />}      />
-            <Route path="counselling" element={<Counselling />} />
+            <Route path="dashboard"       element={<Dashboard />}        />
+            <Route path="resume"          element={<Resume />}           />
+            <Route path="counselling"     element={<Counselling />}      />
+            <Route path="my-applications" element={<MyApplications />}  />
+            <Route path="saved-jobs"      element={<SavedJobs />}        />
+            <Route path="notifications"   element={<Notifications />}   />
+            <Route path="profile"         element={<ProfileSettings />}  />
+            <Route path="schemes"         element={<Schemes />}          />
+            <Route path="my-enrollments"  element={<MyEnrollments />}   />
+            <Route path="job-alerts"      element={<JobAlerts />}        />
           </Route>
         </Route>
 

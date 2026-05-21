@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { analyseQuery } from '../utils/helpers'
+import { analyseQuery, smartReply } from '../utils/helpers'
 import { FiSend, FiMessageCircle, FiX } from 'react-icons/fi'
 import SuggestionCard from './SuggestionCard'
-import { chatAPI } from '../api/axios'
 
 // Initial bot greeting message
 const WELCOME_MSG = {
@@ -39,27 +38,15 @@ export default function QueryBox() {
     setInput('')
     setLoading(true)
 
-    try {
-      // Try the backend guidance API first
-      const { data } = await chatAPI.sendMessage(text)
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now() + 1, from: 'bot', text: data.reply || 'Here are some suggestions:', suggestions: data.suggestions || [] },
-      ])
-    } catch {
-      // Fallback: local keyword analysis
-      const suggestions = analyseQuery(text)
-      const reply = suggestions.length
-        ? 'Based on your query, here are the relevant services:'
-        : "I couldn't find an exact match. Please try keywords like \"job\", \"training\", \"resume\", or \"career counselling\"."
-
+    // Simulate slight delay for natural feel
+    setTimeout(() => {
+      const { reply, suggestions } = smartReply(text)
       setMessages((prev) => [
         ...prev,
         { id: Date.now() + 1, from: 'bot', text: reply, suggestions },
       ])
-    } finally {
       setLoading(false)
-    }
+    }, 500)
   }
 
   const handleKey = (e) => {
@@ -124,7 +111,7 @@ export default function QueryBox() {
                 </div>
               )}
               <div className={msg.from === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'}>
-                <p className="text-sm">{msg.text}</p>
+                <p className="text-sm whitespace-pre-line">{msg.text}</p>
               </div>
               {/* Suggestions */}
               {msg.suggestions?.length > 0 && (

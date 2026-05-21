@@ -1,17 +1,33 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useSidebar } from '../context/SidebarContext'
+import { useTheme } from '../context/ThemeContext'
+import { userAPI } from '../api/axios'
 import {
   FiBell, FiMenu, FiX, FiUser, FiLogOut,
-  FiChevronDown, FiSearch,
+  FiChevronDown, FiSearch, FiSun, FiMoon,
 } from 'react-icons/fi'
 import { MdWork } from 'react-icons/md'
 
-export default function Navbar({ onMenuClick, sidebarOpen }) {
+export default function Navbar() {
   const { user, logout, isAuthenticated, isAdmin } = useAuth()
+  const { sidebarOpen, toggleSidebar } = useSidebar()
+  const { dark, toggleTheme } = useTheme()
   const navigate = useNavigate()
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [mobileOpen,   setMobileOpen]   = useState(false)
+  const [dropdownOpen,  setDropdownOpen]  = useState(false)
+  const [mobileOpen,    setMobileOpen]    = useState(false)
+  const [unreadCount,   setUnreadCount]   = useState(0)
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    userAPI.getNotifications()
+      .then(({ data }) => {
+        const list = data.data || data || []
+        setUnreadCount(list.filter(n => !n.is_read).length)
+      })
+      .catch(() => {})
+  }, [isAuthenticated])
 
   const handleLogout = async () => {
     await logout()
@@ -27,7 +43,7 @@ export default function Navbar({ onMenuClick, sidebarOpen }) {
           <div className="flex items-center gap-3">
             {isAuthenticated && (
               <button
-                onClick={onMenuClick}
+                onClick={toggleSidebar}
                 className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition"
                 aria-label="Toggle sidebar"
               >
@@ -71,13 +87,26 @@ export default function Navbar({ onMenuClick, sidebarOpen }) {
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
               <>
+                {/* Dark / Light toggle */}
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                  title={dark ? 'Switch to Light mode' : 'Switch to Dark mode'}
+                >
+                  {dark ? <FiSun size={20} className="text-yellow-400" /> : <FiMoon size={20} />}
+                </button>
+
                 {/* Notification bell */}
                 <Link
-                  to="/dashboard"
+                  to="/notifications"
                   className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition"
                 >
                   <FiBell size={20} />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </Link>
 
                 {/* User dropdown */}
