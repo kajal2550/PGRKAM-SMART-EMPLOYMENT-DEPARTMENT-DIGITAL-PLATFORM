@@ -1,0 +1,123 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    --color-primary-50:  #eff6ff;
+    --color-primary-100: #dbeafe;
+    --color-primary-200: #bfdbfe;
+    --color-primary-300: #93c5fd;
+    --color-primary-400: #60a5fa;
+    --color-primary-500: #3b82f6;
+    --color-primary-600: #2563eb;
+    --color-primary-700: #1d4ed8;
+    --color-primary-800: #1e40af;
+    --color-primary-900: #1e3a8a;
+    --color-primary-950: #172554;
+
+    --color-navy-700: #0f2d5e;
+    --color-navy-800: #0a1f42;
+    --color-navy-900: #060f21;
+
+    --shadow-glass: 0 8px 32px 0 rgba(31,38,135,0.37);
+    --shadow-card:  0 4px 24px rgba(0,0,0,0.08);
+}
+
+/* ── Base ────────────────────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter', sans-serif; @apply bg-gray-50 text-gray-900; }
+
+/* ── Components (matching React index.css) ───────────────────────────── */
+.glass-card {
+    @apply bg-white/70 backdrop-blur-md border border-white/30 rounded-2xl;
+    box-shadow: var(--shadow-glass);
+}
+.glass-card-dark {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl;
+    box-shadow: var(--shadow-glass);
+}
+.btn-primary {
+    @apply inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+}
+.btn-secondary {
+    @apply inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-primary-600 font-semibold px-6 py-2.5 rounded-xl border border-primary-200 transition-all duration-200 shadow-sm hover:shadow active:scale-95;
+}
+.input-field {
+    @apply w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-800 placeholder-gray-400;
+}
+.card { @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-5; }
+
+.badge       { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium; }
+.badge-blue  { @apply bg-blue-100 text-blue-800; }
+.badge-green { @apply bg-green-100 text-green-800; }
+.badge-yellow{ @apply bg-yellow-100 text-yellow-800; }
+.badge-red   { @apply bg-red-100 text-red-800; }
+
+.chat-bubble-user { @apply bg-primary-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-xs shadow-sm; }
+.chat-bubble-bot  { @apply bg-white text-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 max-w-xs shadow-sm border border-gray-100; }
+
+.nav-item        { @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-primary-50 hover:text-primary-700 text-gray-600; }
+.nav-item-active { @apply bg-primary-600 text-white shadow-md; }
+
+.text-gradient { background: linear-gradient(to right, #2563eb, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.bg-gradient-primary { @apply bg-gradient-to-br from-primary-900 via-primary-800 to-blue-700; }
+
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.animate-fade-in  { animation: fadeIn  0.5s ease-in-out; }
+.animate-slide-up { animation: slideUp 0.4s ease-out; }
+
+/* ── Dark Mode: automatic global overrides (no per-element dark: classes needed) ── */
+html.dark .bg-white              { background-color: #1e293b; }
+html.dark .bg-gray-50            { background-color: #0f172a; }
+html.dark .bg-gray-100           { background-color: #334155; }
+html.dark .bg-blue-50\/60        { background-color: rgba(37,99,235,0.15); }
+html.dark .bg-blue-50            { background-color: rgba(37,99,235,0.15); }
+html.dark .bg-green-50           { background-color: rgba(22,163,74,0.15); }
+html.dark .bg-orange-50          { background-color: rgba(234,88,12,0.12); }
+html.dark .bg-purple-50          { background-color: rgba(147,51,234,0.12); }
+html.dark .bg-red-50             { background-color: rgba(220,38,38,0.12); }
+
+html.dark .text-gray-900         { color: #f9fafb; }
+html.dark .text-gray-800         { color: #f3f4f6; }
+html.dark .text-gray-700         { color: #e5e7eb; }
+html.dark .text-gray-600         { color: #d1d5db; }
+html.dark .text-gray-500         { color: #9ca3af; }
+html.dark .text-gray-400         { color: #6b7280; }
+
+html.dark .border-gray-100       { border-color: #334155; }
+html.dark .border-gray-200       { border-color: #334155; }
+html.dark .divide-gray-50 > * + * { border-color: #334155; }
+html.dark .divide-y > * + *      { border-color: #334155; }
+
+html.dark .shadow-sm  { box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+html.dark .shadow-md  { box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+html.dark .shadow-lg  { box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+
+/* Hover states */
+html.dark .hover\:bg-gray-100:hover        { background-color: #374151; }
+html.dark .hover\:bg-gray-50:hover         { background-color: #1f2937; }
+html.dark .hover\:bg-primary-50:hover      { background-color: rgba(30,58,138,0.3); }
+html.dark .hover\:bg-primary-50\/50:hover  { background-color: rgba(30,58,138,0.2); }
+html.dark .hover\:bg-red-50:hover          { background-color: rgba(220,38,38,0.15); }
+
+/* Input fields */
+html.dark .input-field {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #f3f4f6;
+}
+html.dark .input-field::placeholder { color: #6b7280; }
+html.dark input, html.dark textarea, html.dark select {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #f3f4f6;
+}
+html.dark input::placeholder, html.dark textarea::placeholder { color: #6b7280; }
