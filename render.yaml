@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: pgrkam-portal
+    runtime: docker
+    dockerfilePath: Laravel Project/Dockerfile
+    dockerContext: Laravel Project
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        value: base64:BAeLMPYz1p4TyNGUmyaECJ6JqDdpeq1iqX4pwA3PEww=
