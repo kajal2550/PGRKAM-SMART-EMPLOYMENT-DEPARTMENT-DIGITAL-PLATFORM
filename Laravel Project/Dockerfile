@@ -2,40 +2,22 @@ FROM php:8.2-cli
 
 WORKDIR /app
 
-# Install system dependencies + Node.js
 RUN apt-get update && apt-get install -y \
-    unzip \
-    git \
-    libzip-dev \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libsqlite3-dev \
-    curl \
-    nodejs \
-    npm \
+    unzip git libzip-dev libpng-dev libonig-dev libxml2-dev libsqlite3-dev curl \
     && docker-php-ext-install zip pdo pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy project files
 COPY . .
 
-# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Set permissions
 RUN chmod -R 775 storage bootstrap/cache \
     && mkdir -p database \
     && touch database/database.sqlite \
     && chmod 664 database/database.sqlite
 
-# Copy startup script
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
 EXPOSE 10000
 
-CMD ["/start.sh"]
+CMD ["sh", "-c", "cp .env.example .env && printf '\\nDB_CONNECTION=sqlite\\nDB_DATABASE=/app/database/database.sqlite\\nSESSION_DRIVER=file\\nCACHE_STORE=file\\nQUEUE_CONNECTION=sync\\n' >> .env && mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs && touch /app/database/database.sqlite && chmod -R 775 storage bootstrap/cache && php artisan config:clear && php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=10000"]
