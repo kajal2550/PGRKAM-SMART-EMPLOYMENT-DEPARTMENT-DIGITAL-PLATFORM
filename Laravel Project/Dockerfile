@@ -22,7 +22,7 @@ RUN printf 'APP_NAME=PGRKAM\n' > .env && \
     printf 'APP_ENV=production\n' >> .env && \
     printf 'APP_KEY=base64:BAeLMPYz1p4TyNGUmyaECJ6JqDdpeq1iqX4pwA3PEww=\n' >> .env && \
     printf 'APP_DEBUG=false\n' >> .env && \
-    printf 'APP_URL=https://pgrkam-smart-employment-department.onrender.com\n' >> .env && \
+    printf 'APP_URL=https://pgrkam-portal.onrender.com\n' >> .env && \
     printf 'DB_CONNECTION=sqlite\n' >> .env && \
     printf 'DB_DATABASE=/app/database/database.sqlite\n' >> .env && \
     printf 'SESSION_DRIVER=file\n' >> .env && \
@@ -38,8 +38,7 @@ RUN mkdir -p storage/framework/sessions storage/framework/views storage/framewor
 
 RUN php artisan migrate --force --seed
 
-RUN php artisan config:cache && \
-    php artisan route:cache && \
+RUN php artisan route:cache && \
     php artisan view:cache
 
 EXPOSE 10000
