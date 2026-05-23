@@ -1,1 +1,1 @@
-*.sqlite*
+# Allow empty sqlite file for deployment
