@@ -2,7 +2,7 @@ FROM php:8.2-cli
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies + Node.js
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libsqlite3-dev \
     curl \
+    nodejs \
+    npm \
     && docker-php-ext-install zip pdo pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -23,6 +25,9 @@ COPY . .
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Install Node dependencies and build Vite assets
+RUN npm install && npm run build
 
 # Set permissions
 RUN chmod -R 775 storage bootstrap/cache \
