@@ -31,9 +31,6 @@ mkdir -p storage/framework/cache
 mkdir -p storage/logs
 chmod -R 775 storage bootstrap/cache
 
-# Generate app key
-php artisan key:generate --force
-
 # Clear old cache
 php artisan config:clear
 php artisan cache:clear
