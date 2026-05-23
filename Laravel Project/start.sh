@@ -19,6 +19,7 @@ echo "DB_DATABASE=/app/database/database.sqlite" >> .env
 echo "SESSION_DRIVER=file" >> .env
 echo "CACHE_STORE=file" >> .env
 echo "QUEUE_CONNECTION=sync" >> .env
+echo "ASSET_URL=" >> .env
 
 echo "==> .env contents (DB lines):"
 grep -E "^DB_|^SESSION_|^CACHE_|^APP_" .env || true
