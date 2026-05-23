@@ -18,10 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Allow requests from the React dev server
-        $middleware->trustHosts(fn () => [
-            'localhost',
-            '127.0.0.1',
-        ]);
+        // $middleware->trustHosts(fn () => [
+        //     'localhost',
+        //     '127.0.0.1',
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Return JSON errors for API routes
