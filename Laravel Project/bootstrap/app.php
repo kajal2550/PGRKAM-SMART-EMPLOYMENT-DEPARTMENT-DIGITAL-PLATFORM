@@ -22,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
         //     'localhost',
         //     '127.0.0.1',
         // ]);
+
+        // Trust all proxies (needed for Render load balancer)
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Return JSON errors for API routes
