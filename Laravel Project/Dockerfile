@@ -18,9 +18,30 @@ RUN chmod -R 775 storage bootstrap/cache \
     && touch database/database.sqlite \
     && chmod 664 database/database.sqlite
 
-# Create .env directly in Dockerfile (no CRLF risk)
-RUN printf 'APP_NAME=PGRKAM\nAPP_ENV=production\nAPP_DEBUG=false\nAPP_URL=https://pgrkam-smart-employment-department.onrender.com\nDB_CONNECTION=sqlite\nDB_DATABASE=/app/database/database.sqlite\nSESSION_DRIVER=file\nSESSION_LIFETIME=120\nCACHE_STORE=file\nQUEUE_CONNECTION=sync\nLOG_CHANNEL=stack\nLOG_LEVEL=error\nFILESYSTEM_DISK=local\n' > .env
+RUN printf 'APP_NAME=PGRKAM\n' > .env && \
+    printf 'APP_ENV=production\n' >> .env && \
+    printf 'APP_KEY=base64:BAeLMPYz1p4TyNGUmyaECJ6JqDdpeq1iqX4pwA3PEww=\n' >> .env && \
+    printf 'APP_DEBUG=false\n' >> .env && \
+    printf 'APP_URL=https://pgrkam-smart-employment-department.onrender.com\n' >> .env && \
+    printf 'DB_CONNECTION=sqlite\n' >> .env && \
+    printf 'DB_DATABASE=/app/database/database.sqlite\n' >> .env && \
+    printf 'SESSION_DRIVER=file\n' >> .env && \
+    printf 'SESSION_LIFETIME=120\n' >> .env && \
+    printf 'CACHE_STORE=file\n' >> .env && \
+    printf 'QUEUE_CONNECTION=sync\n' >> .env && \
+    printf 'LOG_CHANNEL=stack\n' >> .env && \
+    printf 'LOG_LEVEL=error\n' >> .env && \
+    printf 'FILESYSTEM_DISK=local\n' >> .env && \
+    printf 'MAIL_MAILER=log\n' >> .env
+
+RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs
+
+RUN php artisan migrate --force --seed
+
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "touch /app/database/database.sqlite && chmod 664 /app/database/database.sqlite && chmod -R 775 storage bootstrap/cache && php artisan key:generate --force && php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=10000"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
