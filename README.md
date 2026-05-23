@@ -12,7 +12,8 @@
 
 **Punjab Government's centralized employment platform connecting job seekers with government & private job opportunities, skill training programs, professional resume tools, and career counselling services.**
 
-[🌐 Live Demo](#demo-credentials) · [🚀 Quick Start](#quick-start) · [✨ Features](#features)
+[🌐 Live Demo](
+https://pgrkam-portal.onrender.com/) · [🚀 Quick Start](#quick-start) · [✨ Features](#features)
 
 </div>
 
