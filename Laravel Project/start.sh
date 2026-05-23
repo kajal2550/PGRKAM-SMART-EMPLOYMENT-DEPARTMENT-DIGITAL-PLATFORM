@@ -8,27 +8,41 @@ if [ ! -f .env ]; then
     cp .env.example .env
 fi
 
-# Force SQLite settings in .env
-grep -q "^DB_CONNECTION=" .env && sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env || echo "DB_CONNECTION=sqlite" >> .env
-grep -q "^DB_DATABASE=" .env && sed -i 's|^DB_DATABASE=.*|DB_DATABASE=/app/database/database.sqlite|' .env || echo "DB_DATABASE=/app/database/database.sqlite" >> .env
-grep -q "^SESSION_DRIVER=" .env && sed -i 's/^SESSION_DRIVER=.*/SESSION_DRIVER=cookie/' .env || echo "SESSION_DRIVER=cookie" >> .env
-grep -q "^CACHE_STORE=" .env && sed -i 's/^CACHE_STORE=.*/CACHE_STORE=array/' .env || echo "CACHE_STORE=array" >> .env
-grep -q "^QUEUE_CONNECTION=" .env && sed -i 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' .env || echo "QUEUE_CONNECTION=sync" >> .env
+# Force overwrite DB and session settings for Render (SQLite)
+cat >> .env << 'EOF'
+
+# Render overrides
+DB_CONNECTION=sqlite
+DB_DATABASE=/app/database/database.sqlite
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUEUE_CONNECTION=sync
+EOF
 
 # Create SQLite database file
 mkdir -p /app/database
 touch /app/database/database.sqlite
 chmod 664 /app/database/database.sqlite
 
-# Generate app key if not set
+# Create storage directories
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
+mkdir -p storage/framework/cache
+mkdir -p storage/logs
+chmod -R 775 storage bootstrap/cache
+
+# Generate app key
 php artisan key:generate --force
+
+# Clear old cache
+php artisan config:clear
+php artisan cache:clear
 
 # Run migrations
 echo "==> Running migrations..."
 php artisan migrate --force
 
-# Clear and cache config
-php artisan config:clear
+# Cache for performance
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
