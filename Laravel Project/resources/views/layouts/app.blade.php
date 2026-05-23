@@ -236,6 +236,133 @@
     @yield('content')
   </main>
 
+  {{-- ═══ FLOATING SMART GUIDE WIDGET (every page) ═══ --}}
+  <div x-data="{ open: false }" class="fixed bottom-6 right-6 z-50">
+
+    {{-- Chat Window --}}
+    <div x-show="open" x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+         class="mb-4 w-80 bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden"
+         style="display:none">
+
+      {{-- Header --}}
+      <div class="bg-gradient-to-r from-primary-700 to-blue-600 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          </div>
+          <div>
+            <p class="text-white font-bold text-xs">PGRKAM Guide</p>
+            <p class="text-blue-200 text-[10px] flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-400 rounded-full inline-block animate-pulse"></span>Online · Free</p>
+          </div>
+        </div>
+        <button @click="open=false" class="text-white/70 hover:text-white transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      {{-- Quick Buttons --}}
+      <div class="px-3 pt-3 pb-1 flex flex-wrap gap-1.5">
+        @foreach([['I need a job','government job'],['Learn a skill','skill training'],['Build resume','resume cv'],['Career advice','career counselling']] as $b)
+        <button onclick="floatGuide('{{ $b[1] }}')"
+          class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-primary-50 text-primary-700 border border-primary-200 hover:bg-primary-100 transition">
+          {{ $b[0] }}
+        </button>
+        @endforeach
+      </div>
+
+      {{-- Messages --}}
+      <div id="float-messages" class="px-3 py-2 space-y-2 h-48 overflow-y-auto bg-gray-50">
+        <div class="flex gap-2">
+          <div class="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs">🤖</div>
+          <div class="bg-white rounded-xl rounded-tl-none px-3 py-2 shadow-sm border border-gray-100 text-xs text-gray-700 max-w-[200px]">
+            Hi! Tell me what you need — job, training, resume, or career advice!
+          </div>
+        </div>
+      </div>
+
+      {{-- Input --}}
+      <div class="p-3 border-t border-gray-100 bg-white">
+        <div class="flex gap-2">
+          <input type="text" id="float-input" placeholder="Type your query..."
+            class="flex-1 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-400"
+            onkeydown="if(event.key==='Enter') floatGuide()" />
+          <button onclick="floatGuide()" class="bg-primary-600 hover:bg-primary-700 text-white px-3 py-2 rounded-xl transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {{-- Toggle Button --}}
+    <button @click="open=!open"
+      class="w-14 h-14 bg-gradient-to-br from-primary-600 to-blue-500 hover:from-primary-700 hover:to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center relative">
+      <svg x-show="!open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+      </svg>
+      <svg x-show="open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+      <span class="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></span>
+    </button>
+  </div>
+
+  <script>
+  function floatGuide(preset) {
+    const input = document.getElementById('float-input');
+    const msg   = preset || input.value.trim();
+    if (!msg) return;
+    const box = document.getElementById('float-messages');
+    const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    box.innerHTML += `<div class="flex justify-end gap-2">
+      <div class="bg-primary-600 text-white rounded-xl rounded-tr-none px-3 py-2 text-xs max-w-[180px]">${msg}</div>
+    </div>`;
+    box.innerHTML += `<div id="float-typing" class="flex gap-2">
+      <div class="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0 text-xs">🤖</div>
+      <div class="bg-white rounded-xl rounded-tl-none px-3 py-2 shadow-sm border border-gray-100">
+        <div class="flex gap-1 items-center h-4">
+          <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0ms"></span>
+          <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:150ms"></span>
+          <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:300ms"></span>
+        </div>
+      </div>
+    </div>`;
+    box.scrollTop = box.scrollHeight;
+    input.value = '';
+
+    fetch('/api/chat-guide', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+      body: JSON.stringify({ message: msg })
+    })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('float-typing')?.remove();
+      let html = `<div class="flex gap-2">
+        <div class="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs">🤖</div>
+        <div class="bg-white rounded-xl rounded-tl-none px-3 py-2 shadow-sm border border-gray-100 max-w-[200px]">
+          <p class="text-xs text-gray-700 mb-1">${data.reply}</p>`;
+      if (data.suggestions) {
+        data.suggestions.forEach(s => {
+          html += `<a href="${s.path}" class="flex items-center gap-1.5 mt-1.5 px-2 py-1.5 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded-lg transition">
+            <span class="text-sm">${s.icon}</span>
+            <span class="text-[11px] font-bold text-primary-700">${s.module}</span>
+            <svg class="w-3 h-3 text-primary-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          </a>`;
+        });
+      }
+      html += `</div></div>`;
+      box.innerHTML += html;
+      box.scrollTop = box.scrollHeight;
+    });
+  }
+  </script>
+
   <footer class="bg-navy-900 text-gray-300">
     <div class="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
       <div>
