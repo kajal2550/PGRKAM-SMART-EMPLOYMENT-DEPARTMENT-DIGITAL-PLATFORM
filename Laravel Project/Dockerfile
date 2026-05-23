@@ -26,9 +26,6 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Install Node dependencies and build Vite assets
-RUN npm install && npm run build
-
 # Set permissions
 RUN chmod -R 775 storage bootstrap/cache \
     && mkdir -p database \
