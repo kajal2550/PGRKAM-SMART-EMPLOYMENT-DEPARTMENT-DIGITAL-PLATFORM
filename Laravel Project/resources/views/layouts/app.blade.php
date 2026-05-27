@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   @vite(['resources/css/app.css', 'resources/js/app.js'])
-  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script>(function(){if(localStorage.getItem('pgrkam_theme')==='dark')document.documentElement.classList.add('dark');})()</script>
 </head>
 <body class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col" x-data="{ sidebarOpen: false, mobileOpen: false }">
