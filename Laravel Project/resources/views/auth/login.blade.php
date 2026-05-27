@@ -2,7 +2,7 @@
 @section('title', 'Sign In – PGRKAM')
 
 @section('content')
-<div class="min-h-screen flex" style="margin-top:-64px;padding-top:0">
+<div class="min-h-screen flex" style="padding-top:64px">
 
   {{-- Left Panel --}}
   <div class="hidden lg:flex lg:w-1/2 bg-gradient-primary flex-col items-center justify-center p-12 relative overflow-hidden">
